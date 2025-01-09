@@ -446,7 +446,7 @@ def test_poisson_analytic(params, elem_gen):
 
 @pytest.mark.parametrize(['params', 'elem_gen'],
                          [(p, d)
-                        #  pytest.param(p, d, marks=pytest.mark.xfail(reason='Conversion of non simplex ref els to fiat needed'))
+                          #  pytest.param(p, d, marks=pytest.mark.xfail(reason='Conversion of non simplex ref els to fiat needed'))
                           for p in [{}, {'snes_type': 'ksponly', 'ksp_type': 'preonly', 'pc_type': 'lu'}]
                           for d in (create_cg1,)])
 def test_quad(params, elem_gen):
