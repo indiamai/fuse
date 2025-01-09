@@ -750,7 +750,7 @@ class CellComplexToFiatSimplex(Simplex):
         return self.construct_subelement(dimension - 1)
 
 
-class CellComplexToFiatCell(UFCQuadrilateral):
+class CellComplexToFiatCell(FiatCell):
     """
     Convert cell complex to fiat
 

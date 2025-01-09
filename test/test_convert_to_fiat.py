@@ -445,13 +445,15 @@ def test_poisson_analytic(params, elem_gen):
 
 
 @pytest.mark.parametrize(['params', 'elem_gen'],
-                         [pytest.param(p, d, marks=pytest.mark.xfail(reason='Conversion of non simplex ref els to fiat needed'))
+                         [(p, d)
+                        #  pytest.param(p, d, marks=pytest.mark.xfail(reason='Conversion of non simplex ref els to fiat needed'))
                           for p in [{}, {'snes_type': 'ksponly', 'ksp_type': 'preonly', 'pc_type': 'lu'}]
                           for d in (create_cg1,)])
 def test_quad(params, elem_gen):
     quad = polygon(4)
     elem = elem_gen(quad)
-    assert (run_test(2, elem.to_ufl(), parameters=params, quadrilateral=True) < 1.e-9)
+    print(elem.generate())
+    assert (run_test(1, elem.to_ufl(), parameters=params, quadrilateral=True) < 1.e-9)
 
 
 @pytest.mark.parametrize("elem_gen,elem_code,deg", [(create_cg2_tri, "CG", 2),
