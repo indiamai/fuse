@@ -383,12 +383,16 @@ class Point():
 
         self.topology = {}
         self.topology_unrelabelled = {}
+        self.topology_unrelabelled = {}
         for i in range(len(structure)):
             dimension = structure[i]
             self.topology[i] = {}
             self.topology_unrelabelled[i] = {}
+            self.topology_unrelabelled[i] = {}
             for node in dimension:
                 self.topology[i][node - min_ids[i]] = tuple([relabelled_verts[vert] for vert in self.get_node(node).ordered_vertices()])
+                self.topology_unrelabelled[i][node - min_ids[i]] = tuple([vert - min_ids[0] for vert in self.get_node(node).ordered_vertices()])
+        return self.topology_unrelabelled
                 self.topology_unrelabelled[i][node - min_ids[i]] = tuple([vert - min_ids[0] for vert in self.get_node(node).ordered_vertices()])
         return self.topology_unrelabelled
 
@@ -794,6 +798,8 @@ class CellComplexToFiatSimplex(Simplex):
             name = "FuseCell"
         self.name = name
 
+        # vertices = sorted(cell.ordered_vertices())
+        
         # verts = [cell.get_node(v, return_coords=True) for v in cell.ordered_vertices()]
         verts = cell.vertices(return_coords=True)
         topology = cell.get_topology()
@@ -936,7 +942,7 @@ class CellComplexToUFL(Cell):
         return self.cell_complex.to_fiat(name=self.cellname())
 
     def __repr__(self):
-        return super(CellComplexToUFL, self).__repr__()
+        return super(CellComplexToUFL, self).__repr__() 
 
     def reconstruct(self, **kwargs):
         """Reconstruct this cell, overwriting properties by those in kwargs."""

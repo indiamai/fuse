@@ -114,12 +114,13 @@ class ElementTriple():
         entities = [(dim, entity) for dim in sorted(top) for entity in sorted(top[dim])]
         # if sort_entities:
         #     # sort the entities by support vertex ids
-        # support = [sorted(top[dim][entity]) for dim, entity in entities]
-        # entities = [entity for verts, entity in sorted(zip(support, entities))]
+        support = [sorted(top[dim][entity]) for dim, entity in entities]
+        entities = [entity for verts, entity in sorted(zip(support, entities))]
         counter = 0
         for entity in entities:
             dim = entity[0]
             for i in range(len(dofs)):
+                # breakpoint()
                 if entity[1] == dofs[i].trace_entity.id - min_ids[dim]:
                     entity_ids[dim][dofs[i].trace_entity.id - min_ids[dim]].append(counter)
                     nodes.append(dofs[i].convert_to_fiat(ref_el, degree))
