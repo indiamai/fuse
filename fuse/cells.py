@@ -798,8 +798,8 @@ class CellComplexToFiatSimplex(Simplex):
             name = "FuseCell"
         self.name = name
 
-        # vertices = sorted(cell.ordered_vertices())
         
+
         # verts = [cell.get_node(v, return_coords=True) for v in cell.ordered_vertices()]
         verts = cell.vertices(return_coords=True)
         topology = cell.get_topology()
