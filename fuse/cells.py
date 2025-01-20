@@ -179,6 +179,22 @@ def firedrake_triangle():
     perm = s3.get_member([2, 0, 1])
     return tri.orient(perm)
 
+def firedrake_quad():
+    """
+    Constructs the a quad cell that matches the firedrake default.
+    """
+    vertices = []
+    for i in range(4):
+        vertices.append(Point(0))
+    edges = []
+    edges.append(Point(1, [vertices[0], vertices[1]], vertex_num=2))
+    edges.append(Point(1, [vertices[2], vertices[3]], vertex_num=2))
+    edges.append(Point(1, [vertices[0], vertices[2]], vertex_num=2))
+    edges.append(Point(1, [vertices[1], vertices[3]], vertex_num=2))
+
+    return Point(2, edges, vertex_num=4)
+
+
 
 def make_tetrahedron():
     vertices = []
@@ -855,7 +871,8 @@ def constructCellComplex(name):
         return polygon(3).to_ufl(name)
         # return firedrake_triangle().to_ufl(name)
     elif name == "quadrilateral":
-        return Cell(name)
+        # return Cell(name)
+        return firedrake_quad().to_ufl(name)
         # return polygon(4).to_ufl(name)
     elif name == "tetrahedron":
         return make_tetrahedron().to_ufl(name)

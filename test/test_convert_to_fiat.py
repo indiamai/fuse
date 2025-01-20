@@ -412,9 +412,9 @@ def helmholtz_solve(mesh, V):
 
 def run_test(r, elem, parameters={}, quadrilateral=False):
     # Create mesh and define function space
-    mesh = UnitSquareMesh(2 ** r, 2 ** r, quadrilateral=quadrilateral)
-    x = SpatialCoordinate(mesh)
-    V = FunctionSpace(mesh, elem)
+    m = UnitSquareMesh(2 ** r, 2 ** r, quadrilateral=quadrilateral)
+    x = SpatialCoordinate(m)
+    V = FunctionSpace(m, elem)
     print(elem)
     print(V)
     # Define variational problem
@@ -453,7 +453,12 @@ def test_quad(params, elem_gen):
     quad = polygon(4)
     elem = elem_gen(quad)
     print(elem.generate())
-    assert (run_test(1, elem.to_ufl(), parameters=params, quadrilateral=True) < 1.e-9)
+    r = 0
+    m = UnitSquareMesh(2 ** r, 2 ** r, quadrilateral=quadrilateral)
+    V = FunctionSpace(m, "CG", 1)
+    # ufl_elem = elem.to_ufl()
+    ufl_elem = V.ufl_element()
+    assert (run_test(r, ufl_elem, parameters=params, quadrilateral=True) < 1.e-9)
 
 
 @pytest.mark.parametrize("elem_gen,elem_code,deg", [(create_cg2_tri, "CG", 2),
