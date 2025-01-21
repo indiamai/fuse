@@ -187,12 +187,17 @@ def firedrake_quad():
     for i in range(4):
         vertices.append(Point(0))
     edges = []
+    # edges.append(Point(1, [vertices[0], vertices[1]], vertex_num=2))
+    # edges.append(Point(1, [vertices[1], vertices[2]], vertex_num=2))
+    # edges.append(Point(1, [vertices[3], vertices[2]], vertex_num=2))
+    # edges.append(Point(1, [vertices[0], vertices[3]], vertex_num=2))
+
     edges.append(Point(1, [vertices[0], vertices[1]], vertex_num=2))
+    edges.append(Point(1, [vertices[1], vertices[3]], vertex_num=2))
     edges.append(Point(1, [vertices[2], vertices[3]], vertex_num=2))
     edges.append(Point(1, [vertices[0], vertices[2]], vertex_num=2))
-    edges.append(Point(1, [vertices[1], vertices[3]], vertex_num=2))
 
-    return Point(2, edges, vertex_num=4)
+    return Point(2, edges, vertex_num=4, edge_orientations={2:[1, 0], 3:[1, 0]})
 
 
 
@@ -237,15 +242,21 @@ class Point():
 
     id_iter = itertools.count()
 
-    def __init__(self, d, edges=[], vertex_num=None, oriented=False, group=None, edge_orientations={}, cell_id=None):
+    def __init__(self, d, edges=[], vertex_num=None, oriented=False, group=None, edge_orientations=None, cell_id=None):
         if not cell_id:
             cell_id = next(self.id_iter)
         self.id = cell_id
         self.dimension = d
+
+        if edge_orientations is None:
+            edge_orientations = {}
+
         if d == 0:
             assert (edges == [])
         if vertex_num:
             edges = self.compute_attachments(vertex_num, edges, edge_orientations)
+        # if vertex_num == 4:
+        #     breakpoint()
 
         self.oriented = oriented
         self.G = nx.DiGraph()
@@ -263,7 +274,7 @@ class Point():
 
         self.group = self.group.add_cell(self)
 
-    def compute_attachments(self, n, points, orientations={}):
+    def compute_attachments(self, n, points, orientations=None):
         """
         Compute the attachment function between two nodes
 
@@ -271,6 +282,9 @@ class Point():
         :param: points: List of Point objects
         :param: orientations: (Optional) Orientation associated with the attachment
         """
+        if orientations is None:
+            orientations = {}
+
         if self.dimension == 1:
             edges = [Edge(points[0], sp.sympify((-1,))),
                      Edge(points[1], sp.sympify((1,)))]
@@ -574,6 +588,7 @@ class Point():
             plt.show()
         if filename:
             ax.figure.savefig(filename)
+            plt.cla()
 
     def plot3d(self, show=True, ax=None):
         assert self.dimension == 3
@@ -783,6 +798,8 @@ class CellComplexToFiatCell(FiatCell):
 
         # verts = [cell.get_node(v, return_coords=True) for v in cell.ordered_vertices()]
         verts = cell.vertices(return_coords=True)
+        # verts = [cell.get_node(c, return_coords=True) for c in cell.ordered_vertices()]
+
         topology = cell.get_topology()
         shape = cell.get_shape()
         super(CellComplexToFiatCell, self).__init__(shape, verts, topology)
@@ -871,7 +888,7 @@ def constructCellComplex(name):
         return polygon(3).to_ufl(name)
         # return firedrake_triangle().to_ufl(name)
     elif name == "quadrilateral":
-        # return Cell(name)
+        
         return firedrake_quad().to_ufl(name)
         # return polygon(4).to_ufl(name)
     elif name == "tetrahedron":
