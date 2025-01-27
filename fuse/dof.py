@@ -37,6 +37,15 @@ class DeltaPairing(Pairing):
     def convert_to_fiat(self, ref_el, dof, interpolant_deg):
         pt = dof.eval(MyTestFunction(lambda *x: x))
         return PointEvaluation(ref_el, pt)
+    
+    def get_pts(self, ref_el, total_degree):
+        entity = ref_el.construct_subelement(self.entity.dim())
+        Q_ref = create_quadrature(entity, total_deg)
+
+        ent_id = self.entity.id - ref_el.fe_cell.get_starter_ids()[self.entity.dim()]
+        Q = FacetQuadratureRule(ref_el, self.entity.dim(), ent_id, Q_ref)
+        qpts, qwts = Q.get_points(), Q.get_weights()
+        return [(1,)], [(1,)]
 
     def add_entity(self, entity):
         res = DeltaPairing()
@@ -90,6 +99,15 @@ class L2Pairing(Pairing):
         res.entity = entity
         return res
 
+    def get_pts(self, ref_el, total_degree):
+        entity = ref_el.construct_subelement(self.entity.dim())
+        Q_ref = create_quadrature(entity, total_deg)
+
+        ent_id = self.entity.id - ref_el.fe_cell.get_starter_ids()[self.entity.dim()]
+        Q = FacetQuadratureRule(ref_el, self.entity.dim(), ent_id, Q_ref)
+        qpts, qwts = Q.get_points(), Q.get_weights()
+        return qpts, qwts
+
     def convert_to_fiat(self, ref_el, dof, interpolant_degree):
         total_deg = interpolant_degree + dof.kernel.degree()
         ent_id = self.entity.id - ref_el.fe_cell.get_starter_ids()[self.entity.dim()]
@@ -98,11 +116,7 @@ class L2Pairing(Pairing):
         Q = FacetQuadratureRule(ref_el, self.entity.dim(), ent_id, Q_ref)
         Jdet = Q.jacobian_determinant()
         qpts, _ = Q.get_points(), Q.get_weights()
-        print(qpts)
-        print(dof.tabulate(qpts))
         f_at_qpts = dof.tabulate(qpts).T / Jdet
-        print(len(Q.pts))
-        print(f_at_qpts.shape)
         functional = FrobeniusIntegralMoment(ref_el, Q, f_at_qpts)
         return functional
 
@@ -295,7 +309,13 @@ class ImmersedDOF(DOF):
     def tabulate(self, Qpts):
         immersion = self.target_space.tabulate(Qpts, self.trace_entity, self.g)
         res = self.kernel.tabulate(Qpts)
+        # [self.attachment(*tuple(r)) for r in res]
         return immersion*res
+    
+    def convert_to_fiat(self, ref_el):
+        pts, wts = self.pairing.get_pts()
+        self.target_space.convert_to_fiat(tabulated, wts)
+        
 
     def __call__(self, g):
         permuted = self.cell.permute_entities(g, self.trace_entity.dim())
