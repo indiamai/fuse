@@ -980,3 +980,4 @@ def constructCellComplex(name):
         return TensorProductPoint(*components).to_ufl(name)
     else:
         raise TypeError("Cell complex construction undefined for {}".format(str(name)))
+
