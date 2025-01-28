@@ -121,21 +121,10 @@ class ElementTriple():
             dim = entity[0]
             for i in range(len(dofs)):
                 if entity[1] == dofs[i].trace_entity.id - min_ids[dim]:
-                    entity_ids[dim][dofs[i].trace_entity.id - min_ids[dim]].append(counter)
-                    if hasattr(dofs[i], "convert_to_fiat_new"):    
-                        nodes.append(dofs[i].convert_to_fiat_new(ref_el, degree))
-                        print("old")
-
-                        print(dofs[i].convert_to_fiat(ref_el, degree).pt_dict)
-                        print(dofs[i].convert_to_fiat(ref_el, degree).target_shape)
-                        print("new")
-
-                        print(dofs[i].convert_to_fiat_new(ref_el, degree).pt_dict)
-                        print(dofs[i].convert_to_fiat_new(ref_el, degree).target_shape)
-                    else:
-                        raise ValueError("using old")
-                        nodes.append(dofs[i].convert_to_fiat(ref_el, degree))
-                    counter += 1
+                    fiat_dofs = dofs[i].convert_to_fiat(ref_el, degree)
+                    nodes.extend(fiat_dofs)
+                    entity_ids[dim][dofs[i].trace_entity.id - min_ids[dim]].extend([counter + i for i in range(len(fiat_dofs))])
+                    counter += len(fiat_dofs)
         entity_perms, pure_perm = self.make_dof_perms(ref_el, entity_ids, nodes, poly_set)
         self.matrices = self.make_overall_dense_matrices(ref_el, entity_ids, nodes, poly_set)
         form_degree = 1 if self.spaces[0].set_shape else 0

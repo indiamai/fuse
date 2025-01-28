@@ -154,6 +154,7 @@ def create_cg2_tri(cell):
                                                 DOFGenerator(edge_xs, C3, S1)])
     return cg
 
+
 def create_hermite(tri):
     vert = tri.vertices()[0]
 
@@ -166,14 +167,11 @@ def create_hermite(tri):
     v_derv_xs = [immerse(tri, dg0, TrGrad)]
     v_derv_dofs = DOFGenerator(v_derv_xs, S3/S2, S1)
 
-    v_derv2_xs = [immerse(tri, dg0, TrHess)]
-    v_derv2_dofs = DOFGenerator(v_derv2_xs, S3/S2, S1)
-
     i_xs = [DOF(DeltaPairing(), PointKernel((0, 0)))]
     i_dofs = DOFGenerator(i_xs, S1, S1)
 
     her = ElementTriple(tri, (P3, CellH2, C0),
-                        [v_dofs, v_derv_dofs, v_derv2_dofs, i_dofs])
+                        [v_dofs, v_derv_dofs, i_dofs])
     return her
 
 
@@ -578,7 +576,8 @@ def test_project_3d(elem_gen, elem_code, deg):
 
     assert np.allclose(out.dat.data, f.dat.data, rtol=1e-5)
 
-@pytest.mark.xfail(reason='Derivative nodes to fiat')
+
+@pytest.mark.xfail(reason='Handling generation of multiple fiat nodes from one in permutations')
 def test_create_hermite():
     deg = 3
     cell = polygon(3)
@@ -595,16 +594,16 @@ def test_create_hermite():
     Qpts, _ = Q.get_points(), Q.get_weights()
 
     fiat_vals = fiat_elem.tabulate(0, Qpts)
-    # my_vals = my_elem.tabulate(0, Qpts)
+    my_vals = my_elem.tabulate(0, Qpts)
 
     fiat_vals = flatten(fiat_vals[(0,) * sd])
-    # my_vals = flatten(my_vals[(0,) * sd])
+    my_vals = flatten(my_vals[(0,) * sd])
 
-    # (x, res, _, _) = np.linalg.lstsq(fiat_vals.T, my_vals.T)
-    # x1 = np.linalg.inv(x)
-    # assert np.allclose(np.linalg.norm(my_vals.T - fiat_vals.T @ x), 0)
-    # assert np.allclose(np.linalg.norm(fiat_vals.T - my_vals.T @ x1), 0)
-    # assert np.allclose(res, 0)
+    (x, res, _, _) = np.linalg.lstsq(fiat_vals.T, my_vals.T)
+    x1 = np.linalg.inv(x)
+    assert np.allclose(np.linalg.norm(my_vals.T - fiat_vals.T @ x), 0)
+    assert np.allclose(np.linalg.norm(fiat_vals.T - my_vals.T @ x1), 0)
+    assert np.allclose(res, 0)
 
 
 def test_investigate_dpc():

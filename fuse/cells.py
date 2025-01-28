@@ -798,8 +798,6 @@ class CellComplexToFiatSimplex(Simplex):
             name = "FuseCell"
         self.name = name
 
-        
-
         # verts = [cell.get_node(v, return_coords=True) for v in cell.ordered_vertices()]
         verts = cell.vertices(return_coords=True)
         topology = cell.get_topology()
@@ -942,7 +940,7 @@ class CellComplexToUFL(Cell):
         return self.cell_complex.to_fiat(name=self.cellname())
 
     def __repr__(self):
-        return super(CellComplexToUFL, self).__repr__() 
+        return super(CellComplexToUFL, self).__repr__()
 
     def reconstruct(self, **kwargs):
         """Reconstruct this cell, overwriting properties by those in kwargs."""
@@ -980,4 +978,3 @@ def constructCellComplex(name):
         return TensorProductPoint(*components).to_ufl(name)
     else:
         raise TypeError("Cell complex construction undefined for {}".format(str(name)))
-
