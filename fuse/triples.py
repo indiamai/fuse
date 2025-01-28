@@ -122,7 +122,19 @@ class ElementTriple():
             for i in range(len(dofs)):
                 if entity[1] == dofs[i].trace_entity.id - min_ids[dim]:
                     entity_ids[dim][dofs[i].trace_entity.id - min_ids[dim]].append(counter)
-                    nodes.append(dofs[i].convert_to_fiat(ref_el, degree))
+                    if hasattr(dofs[i], "convert_to_fiat_new"):    
+                        nodes.append(dofs[i].convert_to_fiat_new(ref_el, degree))
+                        print("old")
+
+                        print(dofs[i].convert_to_fiat(ref_el, degree).pt_dict)
+                        print(dofs[i].convert_to_fiat(ref_el, degree).target_shape)
+                        print("new")
+
+                        print(dofs[i].convert_to_fiat_new(ref_el, degree).pt_dict)
+                        print(dofs[i].convert_to_fiat_new(ref_el, degree).target_shape)
+                    else:
+                        raise ValueError("using old")
+                        nodes.append(dofs[i].convert_to_fiat(ref_el, degree))
                     counter += 1
         entity_perms, pure_perm = self.make_dof_perms(ref_el, entity_ids, nodes, poly_set)
         self.matrices = self.make_overall_dense_matrices(ref_el, entity_ids, nodes, poly_set)
@@ -198,7 +210,7 @@ class ElementTriple():
         A = dualmat.reshape((shp[0], -1))
         B = old_coeffs.reshape((shp[0], -1))
         V = np.dot(A, np.transpose(B))
-
+        print(V)
         with warnings.catch_warnings():
             warnings.filterwarnings("error")
             try:
