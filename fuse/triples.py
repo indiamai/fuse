@@ -102,16 +102,27 @@ class ElementTriple():
             entity_ids[dim] = {i: [] for i in top[dim]}
             entity_perms[dim] = {}
 
-        for i in range(len(dofs)):
-            entity = dofs[i].trace_entity
-            dim = entity.dim()
-            entity_ids[dim][entity.id - min_ids[dim]].append(i)
-            nodes.append(dofs[i].convert_to_fiat(ref_el, degree))
+        entities = [(dim, entity) for dim in sorted(top) for entity in sorted(top[dim])]
+        # if sort_entities:
+        #     # sort the entities by support vertex ids
+        # support = [sorted(top[dim][entity]) for dim, entity in entities]
+        # entities = [entity for verts, entity in sorted(zip(support, entities))]
+        counter = 0
+        for entity in entities:
+            dim = entity[0]
+            for i in range(len(dofs)):
+                if entity[1] == dofs[i].trace_entity.id - min_ids[dim]:
+                    entity_ids[dim][dofs[i].trace_entity.id - min_ids[dim]].append(counter)
+                    nodes.append(dofs[i].convert_to_fiat(ref_el, degree))
+                    counter += 1
         entity_perms, pure_perm = self.make_dof_perms(ref_el, entity_ids, nodes, poly_set)
-
+        self.matrices = self.make_overall_dense_matrices(ref_el, entity_ids, nodes, poly_set)
         form_degree = 1 if self.spaces[0].set_shape else 0
         print("my", [n.pt_dict for n in nodes])
         print(entity_perms)
+        print(entity_ids)
+        print(ref_el.vertices)
+        print()
         # TODO: Change this when Dense case in Firedrake
         if pure_perm:
             dual = DualSet(nodes, ref_el, entity_ids, entity_perms)

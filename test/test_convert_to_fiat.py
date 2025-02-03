@@ -232,7 +232,7 @@ def test_create_fiat_lagrange(elem_gen, elem_code, deg):
                                             (create_cf, polygon(3)),
                                             pytest.param(create_fortin_soulie, polygon(3), marks=pytest.mark.xfail(reason='Entity perms for non symmetric elements')),
                                             (create_dg1_tet, make_tetrahedron()),
-                                            pytest.param(construct_tet_rt, make_tetrahedron(), marks=pytest.mark.xfail(reason='Something wrong with Dense Matrices for 3D'))
+                                            (construct_tet_rt, make_tetrahedron())
                                             ])
 def test_entity_perms(elem_gen, cell):
     elem = elem_gen(cell)
@@ -276,44 +276,39 @@ def test_2d(elem_gen, elem_code, deg):
     assert np.allclose(res, 0)
 
 
-@pytest.mark.parametrize("elem_gen,elem_code,deg,conv_rate", [(create_cg1, "CG", 1, 1.8), (create_cg2_tri, "CG", 2, 2.8)])
+@pytest.mark.parametrize("elem_gen,elem_code,deg,conv_rate", [(create_cg1, "CG", 1, 1.8), (create_cg2_tri, "CG", 2, 2.8),
+                                                              pytest.param(construct_cg3, "CG", 3, 3.8, marks=pytest.mark.xfail(reason='Orientation of edges')),])
 def test_helmholtz(elem_gen, elem_code, deg, conv_rate):
     cell = polygon(3)
     elem = elem_gen(cell)
+    scale_range = range(3, 6)
 
-    diff = [0 for i in range(3, 6)]
-    diff2 = [0 for i in range(3, 6)]
-    for i in range(3, 6):
+    diff = [0 for i in scale_range]
+    diff2 = [0 for i in scale_range]
+    for i in scale_range:
         mesh = UnitSquareMesh(2 ** i, 2 ** i)
 
         V = FunctionSpace(mesh, elem_code, deg)
         res1 = helmholtz_solve(mesh, V)
-        diff2[i - 3] = res1
+        diff2[i-3] = res1
 
         V2 = FunctionSpace(mesh, elem.to_ufl())
         res2 = helmholtz_solve(mesh, V2)
-        diff[i - 3] = res2
-        # assert np.allclose(res1, res2)
+        diff[i-3] = res2
+        assert np.allclose(res1, res2)
 
-    print("l2 error norms:", diff2)
+    print("firedrake l2 error norms:", diff2)
     diff2 = np.array(diff2)
-    conv = np.log2(diff2[:-1] / diff2[1:])
-    print("convergence order:", conv)
-    # assert (np.array(conv) > conv_rate).all()
+    conv1 = np.log2(diff2[:-1] / diff2[1:])
+    print("firedrake convergence order:", conv1)
 
-    print("l2 error norms:", diff)
+    print("fuse l2 error norms:", diff)
     diff = np.array(diff)
-    conv = np.log2(diff[:-1] / diff[1:])
-    print("convergence order:", conv)
-    assert (np.array(conv) > conv_rate).all()
+    conv2 = np.log2(diff[:-1] / diff[1:])
+    print("fuse convergence order:", conv2)
 
-# my [{(0.9999999999999998, -0.5773502691896262): [(1.0, ())]}, {(0.0, 1.1547005383792517): [(1.0, ())]}, {(-1.0000000000000002, -0.5773502691896255): [(1.0, ())]}, {(-0.3333333333333334, 0.577350269189626): [(1.0, ())]}, {(-0.6666666666666667, 3.3306690738754696e-16): [(1.0, ())]}, {(-0.33333333333333354, -0.5773502691896258): [(1.0, ())]}, {(0.333333333333333, -0.5773502691896261): [(1.0, ())]}, {(0.6666666666666665, -2.220446049250313e-16): [(1.0, ())]}, {(0.3333333333333333, 0.5773502691896256): [(1.0, ())]}, {(1.3075696143712455e-16, -9.491303112816474e-17): [(1.0, ())]}]
-# {0: {0: {0: [0]}, 1: {0: [0]}, 2: {0: [0]}}, 1: {0: {0: [0, 1], 1: [1, 0]}, 1: {0: [0, 1], 1: [1, 0]}, 2: {0: [0, 1], 1: [1, 0]}}, 2: {0: {0: [0], 4: [0], 3: [0], 1: [0], 2: [0], 5: [0]}}}
-# <FIAT.finite_element.CiarletElement object at 0x7ff920646240>
-# my [{(0.9999999999999998, -0.5773502691896262): [(1.0, ())]}, {(0.0, 1.1547005383792517): [(1.0, ())]}, {(-1.0000000000000002, -0.5773502691896255): [(1.0, ())]}]
-# {0: {0: {0: [0]}, 1: {0: [0]}, 2: {0: [0]}}, 1: {0: {0: [], 1: []}, 1: {0: [], 1: []}, 2: {0: [], 1: []}}, 2: {0: {0: [], 4: [], 3: [], 1: [], 2: [], 5: []}}}
-# l2 error norms: [0.4341573028691119, 0.3880244805894439, 0.39368517563304845]
-# convergence order: [ 0.16207018 -0.02089471]
+    assert (np.array(conv1) > conv_rate).all()
+    assert (np.array(conv2) > conv_rate).all()
 
 
 def helmholtz_solve(mesh, V):
@@ -325,6 +320,10 @@ def helmholtz_solve(mesh, V):
     a = (inner(grad(u), grad(v)) + inner(u, v)) * dx
     L = inner(f, v) * dx
     u = Function(V)
+    # l_a = assemble(L)
+    # elem = V.finat_element.fiat_equivalent
+    # W = VectorFunctionSpace(mesh, V.ufl_element())
+    # X = assemble(interpolate(mesh.coordinates, W))
     solve(a == L, u)
     f.interpolate(cos(x*pi*2)*cos(y*pi*2))
     return sqrt(assemble(dot(u - f, u - f) * dx))

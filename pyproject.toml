@@ -40,3 +40,8 @@ dev = [
 testpaths = [
     "tests",
 ]
+
+[tool.coverage.run]
+include=[
+    "fuse/*",
+]

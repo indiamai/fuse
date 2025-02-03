@@ -9,6 +9,8 @@ import math
 
 def perm_matrix_to_perm_array(p_mat):
     summed = np.sum(p_mat, axis=0)
+    if np.all(summed == np.zeros_like(summed)):
+        return list(np.zeros_like(summed))
     assert np.all(summed == np.ones_like(summed))
     res = []
     for row in p_mat:

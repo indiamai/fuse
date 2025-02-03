@@ -165,6 +165,21 @@ def polygon(n):
     return Point(2, edges, vertex_num=n)
 
 
+def firedrake_triangle():
+    vertices = []
+    for i in range(3):
+        vertices.append(Point(0))
+    edges = []
+    edges.append(Point(1, [vertices[1], vertices[2]], vertex_num=2))
+    edges.append(Point(1, [vertices[0], vertices[2]], vertex_num=2))
+    edges.append(Point(1, [vertices[0], vertices[1]], vertex_num=2))
+    tri = Point(2, edges, vertex_num=3, edge_orientations={1: [1, 0]})
+    # tri = polygon(3)
+    s3 = tri.group
+    perm = s3.get_member([2, 0, 1])
+    return tri.orient(perm)
+
+
 def make_tetrahedron():
     vertices = []
     for i in range(4):
@@ -335,22 +350,17 @@ class Point():
         min_ids = [min(dimension) for dimension in structure]
         vertices = self.ordered_vertices()
         relabelled_verts = {vertices[i]: i for i in range(len(vertices))}
+
         self.topology = {}
-        self.topology_verts = {}
+        self.topology_unrelabelled = {}
         for i in range(len(structure)):
             dimension = structure[i]
             self.topology[i] = {}
-            self.topology_verts[i] = {}
+            self.topology_unrelabelled[i] = {}
             for node in dimension:
-                neighbours = list(self.G.neighbors(node))
-                # self.topology_verts[i][node - min_ids[i]] = tuple([vert - min_ids[0] for vert in self.get_node(node).ordered_vertices()])
-                self.topology_verts[i][node - min_ids[i]] = tuple([relabelled_verts[vert] for vert in self.get_node(node).ordered_vertices()])
-                if len(neighbours) > 0:
-                    renumbered_neighbours = tuple([neighbour - min_ids[i-1] for neighbour in neighbours])
-                    self.topology[i][node - min_ids[i]] = renumbered_neighbours
-                else:
-                    self.topology[i][node - min_ids[i]] = (node - min_ids[i], )
-        return self.topology_verts
+                self.topology[i][node - min_ids[i]] = tuple([relabelled_verts[vert] for vert in self.get_node(node).ordered_vertices()])
+                self.topology_unrelabelled[i][node - min_ids[i]] = tuple([vert - min_ids[0] for vert in self.get_node(node).ordered_vertices()])
+        return self.topology_unrelabelled
 
     def get_starter_ids(self):
         structure = [sorted(generation) for generation in nx.topological_generations(self.G)]
@@ -427,7 +437,7 @@ class Point():
         for i in range(len(levels)):
             if node in levels[i]:
                 return self.graph_dim() - i
-        raise "Error: Node not found in graph"
+        raise ValueError("Node not found in graph")
 
     def vertices(self, get_class=True, return_coords=False):
         # TODO maybe refactor with get_node
@@ -627,7 +637,7 @@ class Point():
     def to_fiat(self, name=None):
         if len(self.get_topology()[self.dimension][0]) == self.dimension + 1:
             return CellComplexToFiatSimplex(self, name)
-        raise NotImplementedError("Non-Simplex elements are not yet supported")
+        # raise NotImplementedError("Non-Simplex elements are not yet supported")
         return CellComplexToFiatCell(self, name)
 
     def to_ufl(self, name=None):
@@ -718,6 +728,7 @@ class CellComplexToFiatSimplex(Simplex):
             name = "IndiaDefCell"
         self.name = name
 
+        # verts = [cell.get_node(v, return_coords=True) for v in cell.ordered_vertices()]
         verts = cell.vertices(return_coords=True)
         topology = cell.get_topology()
         shape = cell.get_shape()
@@ -754,6 +765,7 @@ class CellComplexToFiatCell(UFCQuadrilateral):
             name = "IndiaDefCell"
         self.name = name
 
+        # verts = [cell.get_node(v, return_coords=True) for v in cell.ordered_vertices()]
         verts = cell.vertices(return_coords=True)
         topology = cell.get_topology()
         shape = cell.get_shape()
@@ -821,7 +833,7 @@ class CellComplexToUFL(Cell):
         return self.cell_complex.to_fiat(name=self.cellname())
 
     def __repr__(self):
-        return super(CellComplexToUFL, self).__repr__() + " Complex"
+        return super(CellComplexToUFL, self).__repr__()
 
     def reconstruct(self, **kwargs):
         """Reconstruct this cell, overwriting properties by those in kwargs."""
@@ -841,9 +853,10 @@ def constructCellComplex(name):
         return Point(1, [Point(0), Point(0)], vertex_num=2).to_ufl(name)
     elif name == "triangle":
         return polygon(3).to_ufl(name)
+        # return firedrake_triangle().to_ufl(name)
     elif name == "quadrilateral":
-        # return Cell(name)
-        return polygon(4).to_ufl(name)
+        return Cell(name)
+        # return polygon(4).to_ufl(name)
     elif name == "tetrahedron":
         return make_tetrahedron().to_ufl(name)
     else:

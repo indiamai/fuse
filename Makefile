@@ -22,6 +22,18 @@ test_examples:
 
 tests:
 	@echo "    Running all tests"
-	@python -m pytest -rx -rP test
+	@python -m coverage run -p -m pytest -rx test
+
+coverage:
+	@python -m coverage combine
+	@python -m coverage report -m 
+	@python -m coverage json
+
+test_cells:
+	@echo "    Running all cell comparison tests"
+	@firedrake-clean
+	@python -m pytest -rPx --run-cleared test/test_cells.py::test_ref_els[expect0]
+	@firedrake-clean
+	@python -m pytest -rPx --run-cleared test/test_cells.py::test_ref_els[expect1]
 
 prepush: lint tests doc

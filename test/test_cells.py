@@ -1,6 +1,10 @@
 from fuse import *
+from firedrake import *
+from fuse.cells import firedrake_triangle
 import pytest
 import numpy as np
+from FIAT.reference_element import default_simplex
+from test_convert_to_fiat import helmholtz_solve
 
 
 @pytest.fixture(scope='module', params=[0, 1, 2])
@@ -106,3 +110,57 @@ def test_oriented_verts():
         permuted = oriented.permute_entities(g, 0)
         print(g, permuted)
         assert g.permute(tetra.ordered_vertices()) == oriented.ordered_vertices()
+
+
+def test_compare_cell_to_firedrake():
+    tri1 = polygon(3)
+    tri2 = default_simplex(2)
+
+    n = 3
+    vertices = []
+    for i in range(n):
+        vertices.append(Point(0))
+    edges = []
+    for i in range(n):
+        edges.append(
+            Point(1, [vertices[(i) % n], vertices[(i+1) % n]], vertex_num=2))
+    cellS3 = S3.add_cell(tri1)
+    for g in cellS3.members():
+        print(g.perm.array_form)
+        try:
+            p = g.perm.array_form
+            tri3 = Point(2, [edges[p[0]], edges[p[1]], edges[p[2]]], vertex_num=n)
+            print(tri1.orient(g).get_topology())
+        except AssertionError:
+            print('FAIL')
+
+    # print(tri1.get_topology())
+    print(tri2.get_topology())
+    tri3 = firedrake_triangle()
+    print(tri3.get_topology())
+
+
+@pytest.fixture
+def mock_cell_complex(mocker, expect):
+    mocker.patch('firedrake.mesh.constructCellComplex', return_value=expect.to_ufl("triangle"))
+
+
+@pytest.mark.skipif("not config.getoption('--run-cleared')", reason="Only run when --run-cleared is given")
+@pytest.mark.usefixtures("mock_cell_complex")
+@pytest.mark.parametrize(["expect"], [(firedrake_triangle(),), (polygon(3),)])
+def test_ref_els(expect):
+    scale_range = range(3, 6)
+
+    diff2 = [0 for i in scale_range]
+    for i in scale_range:
+        mesh = UnitSquareMesh(2 ** i, 2 ** i)
+
+        V = FunctionSpace(mesh, "CG", 3)
+        res1 = helmholtz_solve(mesh, V)
+        diff2[i-3] = res1
+
+    print("firedrake l2 error norms:", diff2)
+    diff2 = np.array(diff2)
+    conv1 = np.log2(diff2[:-1] / diff2[1:])
+    print("firedrake convergence order:", conv1)
+    assert (np.array(conv1) > 3.8).all()
