@@ -52,14 +52,12 @@ jobs:
         run: |
           . /home/firedrake/firedrake/bin/activate
           make tests
-          pwd
-          realpath -s .coverage.*
-          cp .coverage.* ~/.coverage.*
       - name: Upload coverage
         uses: actions/upload-artifact@v4
         with:
           name: covdata
-          path: ~/.coverage.*
+          include-hidden-files: true
+          path: .coverage.*
 
   coverage:
       name: Coverage
