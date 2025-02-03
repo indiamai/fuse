@@ -18,8 +18,8 @@ jobs:
       # Github hosted runners require running as root user:
       # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#docker-container-filesystem
       options: --user root
-      # volumes:
-      #   - ${{ github.workspace }}:/home/firedrake/output
+      volumes:
+        - ${{ github.workspace }}:/home/firedrake/output
     # Steps represent a sequence of tasks that will be executed as
     # part of the jobs
     steps:
@@ -63,6 +63,16 @@ jobs:
       name: Coverage
       needs: test
       runs-on: ubuntu-latest
+      runs-on: ubuntu-latest
+      container:
+        image: firedrakeproject/firedrake:latest
+        # Github hosted runners require running as root user:
+        # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#docker-container-filesystem
+        options: --user root
+        # volumes:
+        #   - ${{ github.workspace }}:/home/firedrake/output
+      # Steps represent a sequence of tasks that will be executed as
+      # part of the jobs
       steps:
         - name: "Check out the repo"
           uses: "actions/checkout@v2"
@@ -74,6 +84,7 @@ jobs:
 
         - name: "Combine"
           run: |
+            . /home/firedrake/firedrake/bin/activate
             make coverage
             export TOTAL=$(python -c "import json;print(json.load(open('coverage.json'))['totals']['percent_covered_display'])")
             echo "total=$TOTAL" >> $GITHUB_ENV
