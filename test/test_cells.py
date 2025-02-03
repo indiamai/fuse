@@ -131,7 +131,7 @@ def test_compare_cell_to_firedrake():
             p = g.perm.array_form
             tri3 = Point(2, [edges[p[0]], edges[p[1]], edges[p[2]]], vertex_num=n)
             print(tri1.orient(g).get_topology())
-        except ValueError:
+        except AssertionError:
             print('FAIL')
 
     # print(tri1.get_topology())
