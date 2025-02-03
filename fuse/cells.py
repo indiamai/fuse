@@ -437,7 +437,7 @@ class Point():
         for i in range(len(levels)):
             if node in levels[i]:
                 return self.graph_dim() - i
-        raise "Error: Node not found in graph"
+        raise ValueError("Node not found in graph")
 
     def vertices(self, get_class=True, return_coords=False):
         # TODO maybe refactor with get_node

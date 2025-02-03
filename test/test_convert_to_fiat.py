@@ -301,7 +301,6 @@ def test_helmholtz(elem_gen, elem_code, deg, conv_rate):
     diff2 = np.array(diff2)
     conv1 = np.log2(diff2[:-1] / diff2[1:])
     print("firedrake convergence order:", conv1)
-    
 
     print("fuse l2 error norms:", diff)
     diff = np.array(diff)
@@ -310,14 +309,6 @@ def test_helmholtz(elem_gen, elem_code, deg, conv_rate):
 
     assert (np.array(conv1) > conv_rate).all()
     assert (np.array(conv2) > conv_rate).all()
-
-# my [{(0.9999999999999998, -0.5773502691896262): [(1.0, ())]}, {(0.0, 1.1547005383792517): [(1.0, ())]}, {(-1.0000000000000002, -0.5773502691896255): [(1.0, ())]}, {(-0.3333333333333334, 0.577350269189626): [(1.0, ())]}, {(-0.6666666666666667, 3.3306690738754696e-16): [(1.0, ())]}, {(-0.33333333333333354, -0.5773502691896258): [(1.0, ())]}, {(0.333333333333333, -0.5773502691896261): [(1.0, ())]}, {(0.6666666666666665, -2.220446049250313e-16): [(1.0, ())]}, {(0.3333333333333333, 0.5773502691896256): [(1.0, ())]}, {(1.3075696143712455e-16, -9.491303112816474e-17): [(1.0, ())]}]
-# {0: {0: {0: [0]}, 1: {0: [0]}, 2: {0: [0]}}, 1: {0: {0: [0, 1], 1: [1, 0]}, 1: {0: [0, 1], 1: [1, 0]}, 2: {0: [0, 1], 1: [1, 0]}}, 2: {0: {0: [0], 4: [0], 3: [0], 1: [0], 2: [0], 5: [0]}}}
-# <FIAT.finite_element.CiarletElement object at 0x7ff920646240>
-# my [{(0.9999999999999998, -0.5773502691896262): [(1.0, ())]}, {(0.0, 1.1547005383792517): [(1.0, ())]}, {(-1.0000000000000002, -0.5773502691896255): [(1.0, ())]}]
-# {0: {0: {0: [0]}, 1: {0: [0]}, 2: {0: [0]}}, 1: {0: {0: [], 1: []}, 1: {0: [], 1: []}, 2: {0: [], 1: []}}, 2: {0: {0: [], 4: [], 3: [], 1: [], 2: [], 5: []}}}
-# l2 error norms: [0.4341573028691119, 0.3880244805894439, 0.39368517563304845]
-# convergence order: [ 0.16207018 -0.02089471]
 
 
 def helmholtz_solve(mesh, V):
@@ -329,10 +320,10 @@ def helmholtz_solve(mesh, V):
     a = (inner(grad(u), grad(v)) + inner(u, v)) * dx
     L = inner(f, v) * dx
     u = Function(V)
-    l_a = assemble(L)
-    elem = V.finat_element.fiat_equivalent
-    W = VectorFunctionSpace(mesh, V.ufl_element())
-    X = assemble(interpolate(mesh.coordinates, W))
+    # l_a = assemble(L)
+    # elem = V.finat_element.fiat_equivalent
+    # W = VectorFunctionSpace(mesh, V.ufl_element())
+    # X = assemble(interpolate(mesh.coordinates, W))
     solve(a == L, u)
     f.interpolate(cos(x*pi*2)*cos(y*pi*2))
     return sqrt(assemble(dot(u - f, u - f) * dx))

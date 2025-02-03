@@ -116,7 +116,7 @@ class ElementTriple():
                     nodes.append(dofs[i].convert_to_fiat(ref_el, degree))
                     counter += 1
         entity_perms, pure_perm = self.make_dof_perms(ref_el, entity_ids, nodes, poly_set)
-        self.matrices =  self.make_overall_dense_matrices(ref_el, entity_ids, nodes, poly_set)
+        self.matrices = self.make_overall_dense_matrices(ref_el, entity_ids, nodes, poly_set)
         form_degree = 1 if self.spaces[0].set_shape else 0
         print("my", [n.pt_dict for n in nodes])
         print(entity_perms)

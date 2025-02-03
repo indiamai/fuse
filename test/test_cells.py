@@ -111,10 +111,11 @@ def test_oriented_verts():
         print(g, permuted)
         assert g.permute(tetra.ordered_vertices()) == oriented.ordered_vertices()
 
+
 def test_compare_cell_to_firedrake():
     tri1 = polygon(3)
     tri2 = default_simplex(2)
-    
+
     n = 3
     vertices = []
     for i in range(n):
@@ -123,41 +124,40 @@ def test_compare_cell_to_firedrake():
     for i in range(n):
         edges.append(
             Point(1, [vertices[(i) % n], vertices[(i+1) % n]], vertex_num=2))
-    from sympy.combinatorics.named_groups import SymmetricGroup
-    s3 = SymmetricGroup(3)
     cellS3 = S3.add_cell(tri1)
     for g in cellS3.members():
         print(g.perm.array_form)
         try:
             p = g.perm.array_form
-            # tri3 = Point(2, [edges[p[0]], edges[p[1]], edges[p[2]]], vertex_num=n)
+            tri3 = Point(2, [edges[p[0]], edges[p[1]], edges[p[2]]], vertex_num=n)
             print(tri1.orient(g).get_topology())
-        except:
+        except ValueError:
             print('FAIL')
-
 
     # print(tri1.get_topology())
     print(tri2.get_topology())
     tri3 = firedrake_triangle()
     print(tri3.get_topology())
 
+
 @pytest.fixture
 def mock_cell_complex(mocker, expect):
     mocker.patch('firedrake.mesh.constructCellComplex', return_value=expect.to_ufl("triangle"))
 
+
 @pytest.mark.skipif("not config.getoption('--run-cleared')", reason="Only run when --run-cleared is given")
 @pytest.mark.usefixtures("mock_cell_complex")
-@pytest.mark.parametrize(["expect"],[(firedrake_triangle(),), (polygon(3),)])
+@pytest.mark.parametrize(["expect"], [(firedrake_triangle(),), (polygon(3),)])
 def test_ref_els(expect):
     scale_range = range(3, 6)
 
     diff2 = [0 for i in scale_range]
     for i in scale_range:
-            mesh = UnitSquareMesh(2 ** i, 2 ** i)
+        mesh = UnitSquareMesh(2 ** i, 2 ** i)
 
-            V = FunctionSpace(mesh, "CG", 3)
-            res1 = helmholtz_solve(mesh, V)
-            diff2[i-3] = res1
+        V = FunctionSpace(mesh, "CG", 3)
+        res1 = helmholtz_solve(mesh, V)
+        diff2[i-3] = res1
 
     print("firedrake l2 error norms:", diff2)
     diff2 = np.array(diff2)
