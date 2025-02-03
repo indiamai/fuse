@@ -164,17 +164,15 @@ def polygon(n):
 
     return Point(2, edges, vertex_num=n)
 
+
 def firedrake_triangle():
     vertices = []
     for i in range(3):
         vertices.append(Point(0))
     edges = []
-    edges.append(
-            Point(1, [vertices[1], vertices[2]], vertex_num=2))
-    edges.append(
-            Point(1, [vertices[0], vertices[2]], vertex_num=2))
-    edges.append(
-            Point(1, [vertices[0], vertices[1]], vertex_num=2))
+    edges.append(Point(1, [vertices[1], vertices[2]], vertex_num=2))
+    edges.append(Point(1, [vertices[0], vertices[2]], vertex_num=2))
+    edges.append(Point(1, [vertices[0], vertices[1]], vertex_num=2))
     tri = Point(2, edges, vertex_num=3, edge_orientations={1: [1, 0]})
     # tri = polygon(3)
     s3 = tri.group
@@ -360,7 +358,6 @@ class Point():
             self.topology[i] = {}
             self.topology_unrelabelled[i] = {}
             for node in dimension:
-                neighbours = list(self.G.neighbors(node))
                 self.topology[i][node - min_ids[i]] = tuple([relabelled_verts[vert] for vert in self.get_node(node).ordered_vertices()])
                 self.topology_unrelabelled[i][node - min_ids[i]] = tuple([vert - min_ids[0] for vert in self.get_node(node).ordered_vertices()])
         return self.topology_unrelabelled
@@ -731,8 +728,6 @@ class CellComplexToFiatSimplex(Simplex):
             name = "IndiaDefCell"
         self.name = name
 
-        
-
         # verts = [cell.get_node(v, return_coords=True) for v in cell.ordered_vertices()]
         verts = cell.vertices(return_coords=True)
         topology = cell.get_topology()
@@ -838,7 +833,7 @@ class CellComplexToUFL(Cell):
         return self.cell_complex.to_fiat(name=self.cellname())
 
     def __repr__(self):
-        return super(CellComplexToUFL, self).__repr__() 
+        return super(CellComplexToUFL, self).__repr__()
 
     def reconstruct(self, **kwargs):
         """Reconstruct this cell, overwriting properties by those in kwargs."""
@@ -866,4 +861,3 @@ def constructCellComplex(name):
         return make_tetrahedron().to_ufl(name)
     else:
         raise TypeError("Cell complex construction undefined for {}".format(str(name)))
-
