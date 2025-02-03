@@ -75,7 +75,22 @@ jobs:
       steps:
         - name: "Check out the repo"
           uses: "actions/checkout@v2"
-
+        - name: Checkout correct FIAT branch
+          run: |
+            . /home/firedrake/firedrake/bin/activate
+            /usr/bin/git config --global --add safe.directory /home/firedrake/firedrake/src/fiat
+            cd /home/firedrake/firedrake/src/fiat
+            git fetch
+            git checkout indiamai/integrate_fuse
+            git status
+        - name: Checkout correct firedrake branch
+          run: |
+            . /home/firedrake/firedrake/bin/activate
+            /usr/bin/git config --global --add safe.directory /home/firedrake/firedrake/src/firedrake
+            cd /home/firedrake/firedrake/src/firedrake
+            git fetch
+            git checkout indiamai/new_def_integration
+            git pull
         - name: "Download coverage data"
           uses: actions/download-artifact@v4
           with:
