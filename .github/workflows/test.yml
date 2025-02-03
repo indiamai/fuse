@@ -63,7 +63,6 @@ jobs:
       name: Coverage
       needs: test
       runs-on: ubuntu-latest
-      runs-on: ubuntu-latest
       container:
         image: firedrakeproject/firedrake:latest
         # Github hosted runners require running as root user:
