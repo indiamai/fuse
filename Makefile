@@ -26,7 +26,7 @@ tests:
 
 coverage:
 	@python -m coverage combine
-	@python -m coverage report -m --skip-covered
+	@python -m coverage report -m 
 	@python -m coverage json
 
 test_cells:
