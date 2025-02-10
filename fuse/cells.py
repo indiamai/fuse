@@ -888,7 +888,6 @@ def constructCellComplex(name):
         return polygon(3).to_ufl(name)
         # return firedrake_triangle().to_ufl(name)
     elif name == "quadrilateral":
-        
         return firedrake_quad().to_ufl(name)
         # return polygon(4).to_ufl(name)
     elif name == "tetrahedron":

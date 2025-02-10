@@ -91,6 +91,15 @@ def create_cg1(cell):
     cg = ElementTriple(cell, (Pk, CellL2, C0), DOFGenerator(xs, get_cyc_group(len(cell.vertices())), S1))
     return cg
 
+def create_cg1_quad(cell):
+    deg = 1
+    vert_dg = create_dg1(cell.vertices()[0])
+    xs = [immerse(cell, vert_dg, TrH1)]
+
+    Pk = PolynomialSpace(deg, deg + 1)
+    cg = ElementTriple(cell, (Pk, CellL2, C0), DOFGenerator(xs, get_cyc_group(len(cell.vertices())), S1))
+    return cg
+
 
 def create_cg1_flipped(cell):
     deg = 1
@@ -448,16 +457,16 @@ def test_poisson_analytic(params, elem_gen):
                          [(p, d)
                           #  pytest.param(p, d, marks=pytest.mark.xfail(reason='Conversion of non simplex ref els to fiat needed'))
                           for p in [{}, {'snes_type': 'ksponly', 'ksp_type': 'preonly', 'pc_type': 'lu'}]
-                          for d in (create_cg1,)])
+                          for d in (create_cg1_quad,)])
 def test_quad(params, elem_gen):
     quad = polygon(4)
     elem = elem_gen(quad)
     print(elem.generate())
     r = 0
     m = UnitSquareMesh(2 ** r, 2 ** r, quadrilateral=quadrilateral)
-    V = FunctionSpace(m, "CG", 1)
-    # ufl_elem = elem.to_ufl()
-    ufl_elem = V.ufl_element()
+    # V = FunctionSpace(m, elem.to_)
+    ufl_elem = elem.to_ufl()
+    # ufl_elem = V.ufl_element()
     assert (run_test(r, ufl_elem, parameters=params, quadrilateral=True) < 1.e-9)
 
 
