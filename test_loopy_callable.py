@@ -233,43 +233,32 @@ y = np.random.rand(n, n)
 
         # g[i, j] = 2*e[i, j] + 3*f[i, j]
 child_knl = lp.make_function(
-        "{[i, j]:0<=i, j < 2}",
+        "{[i, j]:0<=i, j < 3}",
         """
         res[j] =  res[j] + a[i, j]*b[i]
         """, name="matmul",target=lp.CTarget())
-
-args = [lp.GlobalArg("b", dtype=np.float32, shape=(n, )), lp.GlobalArg("res", dtype=np.float32, shape =(n,)),
-                lp.GlobalArg("orientation", dtype=np.uint8), lp.TemporaryVariable("a")]
+import ctypes
+args = [lp.GlobalArg("b", dtype=np.float32, shape=(n, )), lp.GlobalArg("a", dtype=np.float32), lp.GlobalArg("res", dtype=np.float32, shape =(n,)),
+        lp.GlobalArg("o", dtype=np.uint8)]
+# mats = []
+# for val in os.keys():
+#     args += [lp.TemporaryVariable(f"mat{val}", initializer=os[val], read_only=True)]
+#     mats += f"mat{val}"
+# mats += "orientation"
+# matrix_switch_statement(os)
+# transform_insn = lp.CInstruction(tuple(), "a = m1", assignees=("a"), read_variables=frozenset(["o", "m1"]))
+transform_insn = lp.CInstruction(tuple(), "a = mat;", assignees=("a"), read_variables=frozenset(["o", "mat"]), id="assign")
 mats = []
-for val in os.keys():
-    args += [lp.TemporaryVariable(f"mat{val}", initializer=os[val], read_only=True)]
-    mats += f"mat{val}"
-mats += "orientation"
-transform_insn = lp.CInstruction(tuple(), matrix_switch_statement(os), assignees=("a"))
-# args = [lp.GlobalArg(
-#                 name="a",
-#                 dtype=np.float64,
-#                 shape=(n, n)),
-#             lp.GlobalArg(
-#                 name="res",
-#                 dtype=np.float64,
-#                 shape=(n,)),
-#             lp.GlobalArg(
-#                 name="b",
-#                 dtype=np.float64,
-#                 shape=(n,)),
-#             lp.GlobalArg(
-#                 name="orientation",
-#                 dtype=np.uint8),
-#             ...]
-for val in os.keys():
-    args += [lp.TemporaryVariable(f"mat{val}", initializer=os[val], read_only=True)]
+for val in sorted(os.keys()):
+    mats += [os[val]]
+print(os[0])
+args += [lp.TemporaryVariable(f"mat", initializer=np.array(os[0], dtype=np.float32), dtype=np.float32, read_only=True, address_space=lp.AddressSpace(1))]
 parent_knl = lp.make_kernel(
         "{:}",
-        [transform_insn, "res[:] = matmul(a, b, res)"],
+        [transform_insn, "res[:] = matmul(a, b, res) {dep=assign}"],
         kernel_data=args
         ,target=lp.CTarget())
-
 knl = lp.merge([parent_knl, child_knl])
 print(knl)
+print(knl["loopy_kernel"].stringify(with_dependencies=True))
 print(lp.generate_code_v2(knl).device_code())
