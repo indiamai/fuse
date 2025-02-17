@@ -793,7 +793,7 @@ class CellComplexToFiatCell(FiatCell):
     def __init__(self, cell, name=None):
         self.fe_cell = cell
         if name is not None:
-            name = "IndiaDefCell"
+            name = "FuseCell"
         self.name = name
 
         # verts = [cell.get_node(v, return_coords=True) for v in cell.ordered_vertices()]
