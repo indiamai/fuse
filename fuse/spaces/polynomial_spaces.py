@@ -100,27 +100,27 @@ class PolynomialSpace(object):
     def __eq__(self, other):
         """these comparison operators are not quite right - better to use a combining function
         for tensor products TODO"""
-        assert isinstance(other, PolynomialSpace) 
-        max_bool =  self.maxdegree == other.maxdegree
-        min_bool =  self.mindegree == other.mindegree
-        contains =  self.contains == other.contains
-        shape =  self.set_shape == other.set_shape
+        assert isinstance(other, PolynomialSpace)
+        max_bool = self.maxdegree == other.maxdegree
+        min_bool = self.mindegree == other.mindegree
+        contains = self.contains == other.contains
+        shape = self.set_shape == other.set_shape
         return max_bool and min_bool and contains and shape
 
     def __lt__(self, other):
         """these comparison operators are not quite right - better to use a combining function
         for tensor products TODO"""
-        assert isinstance(other, PolynomialSpace) 
+        assert isinstance(other, PolynomialSpace)
         if self.maxdegree > other.maxdegree:
             return True
         elif self.maxdegree == other.maxdegree:
             return self.contains >= other.contains
         return False
-    
+
     def __hash__(self):
         """Hash."""
         return hash((self.set_shape, self.mindegree, self.contains, self.maxdegree))
-    
+
     def restrict(self, mindegree, maxdegree):
         return PolynomialSpace(maxdegree, contains=-1, mindegree=mindegree, set_shape=self.set_shape)
 

@@ -1,8 +1,8 @@
 import pytest
-import numpy.linalg as linalg
 from fuse import *
 from firedrake import *
 from test_2d_examples_docs import construct_cg1, construct_dg1
+
 
 @pytest.mark.parametrize("generator, code, deg", [(construct_cg1, "CG", 1), (construct_dg1, "DG", 1)])
 def test_creation(generator, code, deg):
@@ -46,6 +46,7 @@ def test_creation(generator, code, deg):
 
     assert np.allclose(out.dat.data, f.dat.data, rtol=1e-5)
 
+
 def test_helmholtz():
     m = UnitIntervalMesh(2)
     mesh = ExtrudedMesh(m, 2)
@@ -56,6 +57,7 @@ def test_helmholtz():
 
     U = FunctionSpace(mesh, elem.to_ufl())
     helmholtz_solve(mesh, U)
+
 
 def helmholtz_solve(mesh, V):
     u = TrialFunction(V)

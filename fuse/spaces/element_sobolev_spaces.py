@@ -18,7 +18,7 @@ class ElementSobolevSpace(object):
     def __lt__(self, other):
         """In common with intrinsic Python sets, < indicates "is a proper subset of"."""
         return any([isinstance(other, p) for p in self.parents])
-    
+
     def __eq__(self, other):
         """ specifically do not check domain"""
         return repr(self) == repr(other)

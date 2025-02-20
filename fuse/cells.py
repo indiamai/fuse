@@ -11,7 +11,7 @@ from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 from sympy.combinatorics.named_groups import SymmetricGroup
 from fuse.utils import sympy_to_numpy, fold_reduce
-from FIAT.reference_element import Simplex, UFCQuadrilateral
+from FIAT.reference_element import Simplex, Cell as FiatCell
 from ufl.cell import Cell
 
 
@@ -179,6 +179,7 @@ def firedrake_triangle():
     perm = s3.get_member([2, 0, 1])
     return tri.orient(perm)
 
+
 def firedrake_quad():
     """
     Constructs the a quad cell that matches the firedrake default.
@@ -197,8 +198,7 @@ def firedrake_quad():
     edges.append(Point(1, [vertices[2], vertices[3]], vertex_num=2))
     edges.append(Point(1, [vertices[0], vertices[2]], vertex_num=2))
 
-    return Point(2, edges, vertex_num=4, edge_orientations={2:[1, 0], 3:[1, 0]})
-
+    return Point(2, edges, vertex_num=4, edge_orientations={2: [1, 0], 3: [1, 0]})
 
 
 def make_tetrahedron():
