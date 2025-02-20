@@ -461,10 +461,12 @@ def test_poisson_analytic(params, elem_gen):
                           for d in (create_cg1_quad,)])
 def test_quad(params, elem_gen):
     quad = polygon(4)
+    quad.to_fiat()
     elem = elem_gen(quad)
     r = 0
-    # m = UnitSquareMesh(2 ** r, 2 ** r, quadrilateral=quadrilateral)
-    # V = FunctionSpace(m, elem.to_)
+    m = UnitSquareMesh(2 ** r, 2 ** r, quadrilateral=quadrilateral)
+    # breakpoint()
+    V = FunctionSpace(m, "CG", 1)
     ufl_elem = elem.to_ufl()
     # ufl_elem = V.ufl_element()
     assert (run_test(r, ufl_elem, parameters=params, quadrilateral=True) < 1.e-9)

@@ -43,6 +43,7 @@ class ElementTriple():
                 cell_spaces.append(space)
         self.spaces = tuple(cell_spaces)
         self.DOFGenerator = dof_gen
+        self.flat = False
 
     def __repr__(self):
         return "FuseTriple(%s, %s, (%s, %s, %s), %s)" % (

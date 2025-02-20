@@ -666,16 +666,17 @@ class Point():
         return copy.deepcopy(self)
 
     def to_fiat(self, name=None):
-        if len(self.get_topology()[self.dimension][0]) == self.dimension + 1:
+        if len(self.vertices()) == self.dimension + 1:
             return CellComplexToFiatSimplex(self, name)
-        # raise NotImplementedError("Non-Simplex elements are not yet supported")
-        return CellComplexToFiatCell(self, name)
+        if len(self.vertices()) == 2 ** self.dimension:
+            return CellComplexToFiatHypercube(self, name)
+        raise NotImplementedError("Custon shape elements are not yet supported")
 
     def to_ufl(self, name=None):
         return CellComplexToUFL(self, name)
 
     def _to_dict(self):
-        # think this is probably missing stuf
+        # think this is probably missing stuff
         o_dict = {"dim": self.dimension,
                   "edges": [c for c in self.connections],
                   "oriented": self.oriented,
@@ -756,7 +757,7 @@ class CellComplexToFiatSimplex(Simplex):
     def __init__(self, cell, name=None):
         self.fe_cell = cell
         if name is not None:
-            name = "IndiaDefCell"
+            name = "FuseCell"
         self.name = name
 
         # verts = [cell.get_node(v, return_coords=True) for v in cell.ordered_vertices()]
@@ -781,13 +782,12 @@ class CellComplexToFiatSimplex(Simplex):
         return self.construct_subelement(dimension - 1)
 
 
-class CellComplexToFiatCell(FiatCell):
+class CellComplexToFiatHypercube(FiatCell):
     """
     Convert cell complex to fiat
 
     :param: cell: a fuse cell complex
 
-    Currently assumes simplex.
     """
 
     def __init__(self, cell, name=None):
@@ -802,7 +802,7 @@ class CellComplexToFiatCell(FiatCell):
 
         topology = cell.get_topology()
         shape = cell.get_shape()
-        super(CellComplexToFiatCell, self).__init__(shape, verts, topology)
+        super(CellComplexToFiatHypercube, self).__init__(shape, verts, topology)
 
     def cellname(self):
         return self.name
@@ -892,5 +892,7 @@ def constructCellComplex(name):
         # return polygon(4).to_ufl(name)
     elif name == "tetrahedron":
         return make_tetrahedron().to_ufl(name)
+    elif name == "tetrahedron":
+        raise NotImplementedError("Hexahedron unimplemented in Fuse yet")
     else:
         raise TypeError("Cell complex construction undefined for {}".format(str(name)))
