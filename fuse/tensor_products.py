@@ -3,6 +3,11 @@ from fuse.spaces.polynomial_spaces import PolynomialSpace
 from finat.ufl import TensorProductElement
 from ufl import as_cell
 
+def tensor_product(A, B):
+    if not (isinstance(A, ElementTriple) and isinstance(B, ElementTriple)):
+        raise ValueError("Both components of Tensor Product need to be a Fuse Triple.")
+    return TensorProductTriple(A, B)
+
 class TensorProductTriple(ElementTriple):
 
     def __init__(self, A, B):

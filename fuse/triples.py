@@ -364,11 +364,6 @@ class ElementTriple():
     def _from_dict(o_dict):
         return ElementTriple(o_dict["cell"], o_dict["spaces"], o_dict["dofs"])
 
-    def __mul__(self, other):
-        assert isinstance(other, ElementTriple)
-        from fuse.tensor_products import TensorProductTriple
-        return TensorProductTriple(self, other)
-
 
 class DOFGenerator():
 
