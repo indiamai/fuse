@@ -73,27 +73,14 @@ def helmholtz_solve(mesh, V):
     return sqrt(assemble(dot(u - f, u - f) * dx))
 
 def test_on_quad_mesh():
+    quadrilateral=True
     r = 0
     m = UnitSquareMesh(2 ** r, 2 ** r, quadrilateral=quadrilateral)
-    A = construct_cg1()
-    B = construct_cg1()
-    elem = tensor_product(A, B)
-    elem = elem.flatten()
-
-    U = FunctionSpace(m, elem.to_ufl())
-
-    f = Function(U)
-    f.assign(1)
-
-    out = Function(U)
-    u = TrialFunction(U)
-    v = TestFunction(U)
-    a = inner(u, v)*dx
-    L = inner(f, v)*dx
-    assemble(L)
-    # breakpoint()
-    # # 
-    # U = FunctionSpace(m, "CG", 1)
+    # A = construct_cg1()
+    # B = construct_cg1()
+    # elem = tensor_product(A, B)
+    # elem = elem.flatten()
+    # U = FunctionSpace(m, elem.to_ufl())
 
     # f = Function(U)
     # f.assign(1)
@@ -105,5 +92,31 @@ def test_on_quad_mesh():
     # L = inner(f, v)*dx
     # assemble(L)
     # solve(a == L, out)
-
     # assert np.allclose(out.dat.data, f.dat.data, rtol=1e-5)
+
+    U = FunctionSpace(m, "CG", 1)
+
+    f = Function(U)
+    f.assign(1)
+
+    out = Function(U)
+    u = TrialFunction(U)
+    v = TestFunction(U)
+    a = inner(u, v)*dx
+    L = inner(f, v)*dx
+    solve(a == L, out)
+
+    assert np.allclose(out.dat.data, f.dat.data, rtol=1e-5)
+    # breakpoint()
+
+def test_quad_creation():
+    from fuse.cells import constructCellComplex
+    f_q = constructCellComplex("quadrilateral").to_fiat()
+    print(f_q.get_topology())
+    A = construct_cg1()
+    B = construct_cg1()
+    elem = tensor_product(A, B)
+    # breakpoint()
+    from fuse.cells import TensorProductPoint
+    tensor_prod_cell = TensorProductPoint(A.cell, B.cell)
+    breakpoint()

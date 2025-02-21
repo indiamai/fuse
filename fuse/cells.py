@@ -11,8 +11,8 @@ from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 from sympy.combinatorics.named_groups import SymmetricGroup
 from fuse.utils import sympy_to_numpy, fold_reduce
-from FIAT.reference_element import Simplex, Cell as FiatCell
-from ufl.cell import Cell
+from FIAT.reference_element import Simplex, Cell as FiatCell, TensorProductCell as FiatTensorProductCell, Hypercube
+from ufl.cell import Cell, TensorProductCell
 
 
 class Arrow3D(FancyArrowPatch):
@@ -668,9 +668,9 @@ class Point():
     def to_fiat(self, name=None):
         if len(self.vertices()) == self.dimension + 1:
             return CellComplexToFiatSimplex(self, name)
-        if len(self.vertices()) == 2 ** self.dimension:
-            return CellComplexToFiatHypercube(self, name)
-        raise NotImplementedError("Custon shape elements are not yet supported")
+        # if len(self.vertices()) == 2 ** self.dimension:
+        #     return CellComplexToFiatHypercube(self, name)
+        raise NotImplementedError("Custom shape elements/ First class quads are not yet supported")
 
     def to_ufl(self, name=None):
         return CellComplexToUFL(self, name)
@@ -744,6 +744,26 @@ class Edge():
     def _from_dict(o_dict):
         return Edge(o_dict["point"], o_dict["attachment"], o_dict["orientation"])
 
+class TensorProductPoint():
+
+    def __init__(self, A, B, flat=False):
+        self.A = A
+        self.B = B
+
+        self.flat = flat
+
+    def to_ufl(self, name=None):
+        if self.flat:
+            return CellComplexToUFL(self, "quadrilateral")
+        return TensorProductCell(self.A.to_ufl(), self.B.to_ufl())
+
+    def to_fiat(self, name=None):
+        if self.flat:
+            return CellComplexToFiatHypercube(self, CellComplexToFiatTensorProduct(self, name))
+        return CellComplexToFiatTensorProduct(self, name)
+
+    def flatten(self):
+        return TensorProductPoint(self.A, self.B, True)
 
 class CellComplexToFiatSimplex(Simplex):
     """
@@ -756,7 +776,7 @@ class CellComplexToFiatSimplex(Simplex):
 
     def __init__(self, cell, name=None):
         self.fe_cell = cell
-        if name is not None:
+        if name is None:
             name = "FuseCell"
         self.name = name
 
@@ -782,7 +802,39 @@ class CellComplexToFiatSimplex(Simplex):
         return self.construct_subelement(dimension - 1)
 
 
-class CellComplexToFiatHypercube(FiatCell):
+class CellComplexToFiatTensorProduct(FiatTensorProductCell):
+    """
+    Convert cell complex to fiat
+
+    :param: cell: a fuse tensor product cell complex
+    """
+
+    def __init__(self, cell, name=None):
+        self.fe_cell = cell
+        self.sub_cells = [cell.A.to_fiat(), cell.B.to_fiat()]
+        if name is None:
+            name = " * ".join([s.name for s in self.sub_cells])
+        self.name = name
+
+        super(CellComplexToFiatTensorProduct, self).__init__(cell.A.to_fiat(), cell.B.to_fiat())
+
+    def cellname(self):
+        return self.name
+
+    def construct_subelement(self, dimension):
+        """Constructs the reference element of a cell
+        specified by subelement dimension.
+
+        :arg dimension: subentity dimension (integer)
+        """
+        return self.fe_cell.d_entities(dimension)[0].to_fiat()
+
+    def get_facet_element(self):
+        dimension = self.get_spatial_dimension()
+        return self.construct_subelement(dimension - 1)
+
+
+class CellComplexToFiatHypercube(Hypercube):
     """
     Convert cell complex to fiat
 
@@ -790,19 +842,10 @@ class CellComplexToFiatHypercube(FiatCell):
 
     """
 
-    def __init__(self, cell, name=None):
+    def __init__(self, cell, product):
         self.fe_cell = cell
-        if name is not None:
-            name = "FuseCell"
-        self.name = name
 
-        # verts = [cell.get_node(v, return_coords=True) for v in cell.ordered_vertices()]
-        verts = cell.vertices(return_coords=True)
-        # verts = [cell.get_node(c, return_coords=True) for c in cell.ordered_vertices()]
-
-        topology = cell.get_topology()
-        shape = cell.get_shape()
-        super(CellComplexToFiatHypercube, self).__init__(shape, verts, topology)
+        super(CellComplexToFiatHypercube, self).__init__(product)
 
     def cellname(self):
         return self.name
@@ -888,7 +931,10 @@ def constructCellComplex(name):
         return polygon(3).to_ufl(name)
         # return firedrake_triangle().to_ufl(name)
     elif name == "quadrilateral":
-        return firedrake_quad().to_ufl(name)
+        return Cell(name)
+        # interval = Point(1, [Point(0), Point(0)], vertex_num=2)
+        # return TensorProductPoint(interval, interval).flatten().to_ufl(name)
+        # return firedrake_quad().to_ufl(name)
         # return polygon(4).to_ufl(name)
     elif name == "tetrahedron":
         return make_tetrahedron().to_ufl(name)

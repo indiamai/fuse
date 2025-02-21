@@ -1,4 +1,5 @@
 from fuse.triples import ElementTriple
+from fuse.cells import TensorProductPoint
 from finat.ufl import TensorProductElement, FuseElement
 from finat import FlattenedDimensions
 from ufl import as_cell
@@ -20,6 +21,7 @@ class TensorProductTriple(ElementTriple):
             self.spaces.append(a if a >= b else b)
 
         self.DOFGenerator = [A.DOFGenerator, B.DOFGenerator]
+        self.cell = TensorProductPoint(A.cell, B.cell)
         self.flat = flat
 
     def sub_elements(self):
@@ -30,8 +32,8 @@ class TensorProductTriple(ElementTriple):
 
     def to_ufl(self):
         if self.flat:
-            return FuseElement(self, as_cell("quadrilateral"))
-        return TensorProductElement(*[e.to_ufl() for e in self.sub_elements()], cell=as_cell((self.A.cell.to_ufl(), self.B.cell.to_ufl())))
+            return FuseElement(self, self.cell.flatten().to_ufl())
+        return TensorProductElement(*[e.to_ufl() for e in self.sub_elements()], cell=self.cell.to_ufl())
 
     def flatten(self):
         return TensorProductTriple(self.A, self.B, flat=True)
