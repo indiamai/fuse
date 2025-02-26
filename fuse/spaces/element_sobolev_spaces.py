@@ -22,6 +22,10 @@ class ElementSobolevSpace(object):
     def __eq__(self, other):
         """ specifically do not check domain"""
         return repr(self) == repr(other)
+    
+    def __hash__(self):
+        """Hash."""
+        return hash(("ElementSobolevSpace", str(self)))
 
     def _to_dict(self):
         return {"space": str(self)}

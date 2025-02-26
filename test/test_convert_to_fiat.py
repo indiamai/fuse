@@ -4,7 +4,7 @@ from fuse import *
 from firedrake import *
 from sympy.combinatorics import Permutation
 from FIAT.quadrature_schemes import create_quadrature
-from test_2d_examples_docs import construct_nd, construct_rt, construct_cg3
+from test_2d_examples_docs import construct_cg1, construct_nd, construct_rt, construct_cg3
 from test_3d_examples_docs import construct_tet_rt
 from test_polynomial_space import flatten
 from element_examples import CR_n
@@ -92,14 +92,17 @@ def create_cg1(cell):
     return cg
 
 
-def create_cg1_quad(cell):
-    deg = 1
-    vert_dg = create_dg1(cell.vertices()[0])
-    xs = [immerse(cell, vert_dg, TrH1)]
+def create_cg1_quad():
+    # deg = 1
+    # vert_dg = create_dg1(cell.vertices()[0])
+    # xs = [immerse(cell, vert_dg, TrH1)]
 
-    Pk = PolynomialSpace(deg, deg + 1)
-    cg = ElementTriple(cell, (Pk, CellL2, C0), DOFGenerator(xs, get_cyc_group(len(cell.vertices())), S1))
-    return cg
+    # Pk = PolynomialSpace(deg, deg + 1)
+    # cg = ElementTriple(cell, (Pk, CellL2, C0), DOFGenerator(xs, get_cyc_group(len(cell.vertices())), S1))
+    A = construct_cg1()
+    B = construct_cg1()
+    elem = tensor_product(A, B).flatten()
+    return elem
 
 
 def create_cg1_flipped(cell):
@@ -425,8 +428,6 @@ def run_test(r, elem, parameters={}, quadrilateral=False):
     m = UnitSquareMesh(2 ** r, 2 ** r, quadrilateral=quadrilateral)
     x = SpatialCoordinate(m)
     V = FunctionSpace(m, elem)
-    print(elem)
-    print(V)
     # Define variational problem
     u = Function(V)
     v = TestFunction(V)
@@ -460,15 +461,10 @@ def test_poisson_analytic(params, elem_gen):
                           for p in [{}, {'snes_type': 'ksponly', 'ksp_type': 'preonly', 'pc_type': 'lu'}]
                           for d in (create_cg1_quad,)])
 def test_quad(params, elem_gen):
-    quad = polygon(4)
-    quad.to_fiat()
-    elem = elem_gen(quad)
+    elem = elem_gen()
     r = 0
-    m = UnitSquareMesh(2 ** r, 2 ** r, quadrilateral=quadrilateral)
-    # breakpoint()
-    V = FunctionSpace(m, "CG", 1)
+    m = UnitSquareMesh(2 ** r, 2 ** r, quadrilateral=True)
     ufl_elem = elem.to_ufl()
-    # ufl_elem = V.ufl_element()
     assert (run_test(r, ufl_elem, parameters=params, quadrilateral=True) < 1.e-9)
 
 

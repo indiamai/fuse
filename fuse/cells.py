@@ -12,7 +12,7 @@ from mpl_toolkits.mplot3d import proj3d
 from sympy.combinatorics.named_groups import SymmetricGroup
 from fuse.utils import sympy_to_numpy, fold_reduce
 from FIAT.reference_element import Simplex, Cell as FiatCell, TensorProductCell as FiatTensorProductCell, Hypercube
-from ufl.cell import Cell, TensorProductCell
+from ufl.cell import Cell, TensorProductCell, as_cell
 
 
 class Arrow3D(FancyArrowPatch):
@@ -750,7 +750,11 @@ class TensorProductPoint():
         self.A = A
         self.B = B
 
+        self.dimension = self.A.dimension + self.B.dimension
         self.flat = flat
+    
+    def d_entities(self, d):
+        return self.A.d_entities(d) + self.B.d_entities(d)
 
     def to_ufl(self, name=None):
         if self.flat:
@@ -827,11 +831,14 @@ class CellComplexToFiatTensorProduct(FiatTensorProductCell):
 
         :arg dimension: subentity dimension (integer)
         """
-        return self.fe_cell.d_entities(dimension)[0].to_fiat()
+        return CellComplexToFiatTensorProduct(*[c.construct_subelement(d) for c, d in zip(self.cells, dimension)])
 
     def get_facet_element(self):
         dimension = self.get_spatial_dimension()
         return self.construct_subelement(dimension - 1)
+
+    def flatten(self):
+        return CellComplexToFiatHypercube(self.fe_cell, self)
 
 
 class CellComplexToFiatHypercube(Hypercube):
@@ -856,7 +863,11 @@ class CellComplexToFiatHypercube(Hypercube):
 
         :arg dimension: subentity dimension (integer)
         """
-        return self.fe_cell.d_entities(dimension)[0].to_fiat()
+        if dimension == self.get_dimension():
+            return self
+        # TODO this isn't right, dimension needs to be a tuple
+        raise NotImplementedError("Sub elements of hypercube undefined")
+        return self.product.construct_subelement(dimension).flatten()
 
     def get_facet_element(self):
         dimension = self.get_spatial_dimension()
@@ -931,14 +942,17 @@ def constructCellComplex(name):
         return polygon(3).to_ufl(name)
         # return firedrake_triangle().to_ufl(name)
     elif name == "quadrilateral":
-        return Cell(name)
-        # interval = Point(1, [Point(0), Point(0)], vertex_num=2)
-        # return TensorProductPoint(interval, interval).flatten().to_ufl(name)
+        # return Cell(name)
+        interval = Point(1, [Point(0), Point(0)], vertex_num=2)
+        return TensorProductPoint(interval, interval).flatten().to_ufl(name)
         # return firedrake_quad().to_ufl(name)
         # return polygon(4).to_ufl(name)
     elif name == "tetrahedron":
         return make_tetrahedron().to_ufl(name)
-    elif name == "tetrahedron":
+    elif name == "hexahedron":
         raise NotImplementedError("Hexahedron unimplemented in Fuse yet")
+    elif "*" in name:
+        components =[constructCellComplex(c.strip()).cell_complex for c in name.split("*")]
+        return TensorProductPoint(*components).to_ufl(name)
     else:
         raise TypeError("Cell complex construction undefined for {}".format(str(name)))
