@@ -812,6 +812,10 @@ class CellComplexToFiatTensorProduct(FiatTensorProductCell):
 
     :param: cell: a fuse tensor product cell complex
     """
+    def __new__(cls, cell, name=None, *args, **kwargs):
+        if not isinstance(cell, TensorProductPoint):
+            return cell.to_fiat()
+        return super(CellComplexToFiatTensorProduct, cls).__new__(cls, *args, **kwargs)
 
     def __init__(self, cell, name=None):
         self.fe_cell = cell
@@ -831,7 +835,7 @@ class CellComplexToFiatTensorProduct(FiatTensorProductCell):
 
         :arg dimension: subentity dimension (integer)
         """
-        return CellComplexToFiatTensorProduct(*[c.construct_subelement(d) for c, d in zip(self.cells, dimension)])
+        return CellComplexToFiatTensorProduct(*[c.construct_subelement(d).fe_cell for c, d in zip(self.cells, dimension)])
 
     def get_facet_element(self):
         dimension = self.get_spatial_dimension()
@@ -865,9 +869,11 @@ class CellComplexToFiatHypercube(Hypercube):
         """
         if dimension == self.get_dimension():
             return self
-        # TODO this isn't right, dimension needs to be a tuple
-        raise NotImplementedError("Sub elements of hypercube undefined")
-        return self.product.construct_subelement(dimension).flatten()
+        #assumes symmetric tensor product
+        sub_element = self.product.construct_subelement((dimension,) + (0,)*(len(self.product.cells) - 1))
+        if isinstance(sub_element, CellComplexToFiatTensorProduct):
+            return sub_element.flatten()
+        return sub_element
 
     def get_facet_element(self):
         dimension = self.get_spatial_dimension()
