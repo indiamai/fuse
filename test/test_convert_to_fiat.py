@@ -91,17 +91,32 @@ def create_cg1(cell):
     cg = ElementTriple(cell, (Pk, CellL2, C0), DOFGenerator(xs, get_cyc_group(len(cell.vertices())), S1))
     return cg
 
-
 def create_cg1_quad():
-    # deg = 1
-    # vert_dg = create_dg1(cell.vertices()[0])
-    # xs = [immerse(cell, vert_dg, TrH1)]
+    deg = 1
+    cell = constructCellComplex("quadrilateral").cell_complex
+    for c in cell.vertices(return_coords=True):
+        print(c)
+    vert_dg = create_dg1(cell.vertices()[0])
+    xs = [immerse(cell, vert_dg, TrH1)]
 
-    # Pk = PolynomialSpace(deg, deg + 1)
-    # cg = ElementTriple(cell, (Pk, CellL2, C0), DOFGenerator(xs, get_cyc_group(len(cell.vertices())), S1))
+    Pk = PolynomialSpace(deg, deg + 1)
+    cg = ElementTriple(cell, (Pk, CellL2, C0), DOFGenerator(xs, get_cyc_group(len(cell.vertices())), S1))
+    # for e in cg.generate():
+    #     print(e)
+    return cg
+
+def create_cg1_quad_tensor():
+    # deg = 1
+
     A = construct_cg1()
     B = construct_cg1()
     elem = tensor_product(A, B).flatten()
+
+    vert_dg = create_dg1(cell.vertices()[0])
+    xs = [immerse(cell, vert_dg, TrH1)]
+
+    Pk = PolynomialSpace(deg, deg + 1)
+    cg = ElementTriple(cell, (Pk, CellL2, C0), DOFGenerator(xs, get_cyc_group(len(cell.vertices())), S1))
     return elem
 
 
@@ -459,13 +474,16 @@ def test_poisson_analytic(params, elem_gen):
                          [(p, d)
                           #  pytest.param(p, d, marks=pytest.mark.xfail(reason='Conversion of non simplex ref els to fiat needed'))
                           for p in [{}, {'snes_type': 'ksponly', 'ksp_type': 'preonly', 'pc_type': 'lu'}]
-                          for d in (create_cg1_quad,)])
+                          for d in (create_cg1_quad_tensor,)])
 def test_quad(params, elem_gen):
     elem = elem_gen()
     r = 0
     m = UnitSquareMesh(2 ** r, 2 ** r, quadrilateral=True)
     ufl_elem = elem.to_ufl()
     assert (run_test(r, ufl_elem, parameters=params, quadrilateral=True) < 1.e-9)
+
+def test_non_tensor_quad():
+    create_cg1_quad()
 
 
 @pytest.mark.parametrize("elem_gen,elem_code,deg", [(create_cg2_tri, "CG", 2),

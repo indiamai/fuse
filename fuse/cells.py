@@ -324,7 +324,9 @@ class Point():
 
     def compute_cell_group(self):
         """
-        Systematically work out the symmetry group of the constructed cell
+        Systematically work out the symmetry group of the constructed cell.
+
+        Assumes cell has side length of 2.
         """
         verts = self.ordered_vertices()
         v_coords = [self.get_node(v, return_coords=True) for v in verts]
@@ -753,8 +755,17 @@ class TensorProductPoint():
         self.dimension = self.A.dimension + self.B.dimension
         self.flat = flat
     
-    def d_entities(self, d):
-        return self.A.d_entities(d) + self.B.d_entities(d)
+    def d_entities(self, d, get_class=True):
+        return self.A.d_entities(d, get_class) + self.B.d_entities(d, get_class)
+    
+    def vertices(self, get_class=True, return_coords=False):
+        # TODO maybe refactor with get_node
+        verts = self.d_entities(0, get_class)
+        if return_coords:
+            a_verts = self.A.vertices(return_coords=return_coords)
+            b_verts = self.B.vertices(return_coords=return_coords)
+            return [a + b for a in a_verts for b in b_verts]
+        return verts
 
     def to_ufl(self, name=None):
         if self.flat:
@@ -948,7 +959,6 @@ def constructCellComplex(name):
         return polygon(3).to_ufl(name)
         # return firedrake_triangle().to_ufl(name)
     elif name == "quadrilateral":
-        # return Cell(name)
         interval = Point(1, [Point(0), Point(0)], vertex_num=2)
         return TensorProductPoint(interval, interval).flatten().to_ufl(name)
         # return firedrake_quad().to_ufl(name)
