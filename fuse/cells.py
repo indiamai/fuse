@@ -255,8 +255,6 @@ class Point():
             assert (edges == [])
         if vertex_num:
             edges = self.compute_attachments(vertex_num, edges, edge_orientations)
-        # if vertex_num == 4:
-        #     breakpoint()
 
         self.oriented = oriented
         self.G = nx.DiGraph()
