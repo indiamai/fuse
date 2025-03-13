@@ -31,10 +31,10 @@ jobs:
           git fetch
           git checkout indiamai/new_def_integration
           git pull
-          python -m pip install --break-system-packages -e .
+          python3 -m pip install --break-system-packages -e .
       - name: Install checkedout fuse
         run: |
-          python -m pip install --break-system-packages -e .
+          python3 -m pip install --break-system-packages -e .
       - name: Checkout correct FIAT branch
         run: |
           /usr/bin/git config --global --add safe.directory /home/firedrake/
@@ -45,7 +45,7 @@ jobs:
           git fetch
           git checkout indiamai/integrate_fuse
           git status
-          python -m pip install --break-system-packages -e .
+          python3 -m pip install --break-system-packages -e .
       # - name: Install networkx 
       #   run: |
       #     . /home/firedrake/firedrake/bin/activate
