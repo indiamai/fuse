@@ -26,8 +26,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Checkout correct firedrake branch
         run: |
-          /usr/bin/git config --global --add safe.directory /home/firedrake/firedrake/src/firedrake
-          cd /home/firedrake/firedrake/src/firedrake
+          /usr/bin/git config --global --add safe.directory /home/firedrake/
+          cd /home/firedrake/firedrake/
           git fetch
           git checkout indiamai/new_def_integration
           git pull
@@ -37,9 +37,10 @@ jobs:
           python -m pip install --break-system-packages -e .
       - name: Checkout correct FIAT branch
         run: |
-          . /home/firedrake/firedrake/bin/activate
-          /usr/bin/git config --global --add safe.directory /home/firedrake/firedrake/src/fiat
-          cd /home/firedrake/firedrake/src/fiat
+          /usr/bin/git config --global --add safe.directory /home/firedrake/
+          cd /home/firedrake/
+          git clone https://github.com/firedrakeproject/fiat.git
+          cd fiat
           git fetch
           git checkout indiamai/integrate_fuse
           git status
