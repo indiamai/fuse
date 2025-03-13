@@ -1,5 +1,6 @@
 from FIAT.polynomial_set import ONPolynomialSet
 from FIAT.quadrature_schemes import create_quadrature
+from FIAT.reference_element import cell_to_simplex
 from FIAT import expansions, polynomial_set, reference_element
 from itertools import chain
 from fuse.utils import tabulate_sympy, max_deg_sp_mat
@@ -50,6 +51,7 @@ class PolynomialSpace(object):
         if not isinstance(ref_el, reference_element.Cell):
             ref_el = ref_el.to_fiat()
         sd = ref_el.get_spatial_dimension()
+        ref_el = cell_to_simplex(ref_el)
         if self.set_shape:
             shape = (sd,)
         else:
@@ -161,6 +163,7 @@ class ConstructedPolynomialSpace(PolynomialSpace):
         k = max([s.maxdegree for s in self.spaces])
         space_poly_sets = [s.to_ON_polynomial_set(ref_el) for s in self.spaces]
         sd = ref_el.get_spatial_dimension()
+        ref_el = cell_to_simplex(ref_el)
 
         if all([w == 1 for w in self.weights]):
             weighted_sets = space_poly_sets

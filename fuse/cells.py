@@ -668,8 +668,8 @@ class Point():
     def to_fiat(self, name=None):
         if len(self.vertices()) == self.dimension + 1:
             return CellComplexToFiatSimplex(self, name)
-        # if len(self.vertices()) == 2 ** self.dimension:
-        #     return CellComplexToFiatHypercube(self, name)
+        if len(self.vertices()) == 2 ** self.dimension:
+            return CellComplexToFiatHypercube(self, name)
         raise NotImplementedError("Custom shape elements/ First class quads are not yet supported")
 
     def to_ufl(self, name=None):
@@ -964,7 +964,10 @@ def constructCellComplex(name):
     elif name == "tetrahedron":
         return make_tetrahedron().to_ufl(name)
     elif name == "hexahedron":
-        raise NotImplementedError("Hexahedron unimplemented in Fuse yet")
+        import warnings
+        warnings.warn("Hexahedron unimplemented in Fuse")
+        import ufl
+        return ufl.Cell(name)
     elif "*" in name:
         components =[constructCellComplex(c.strip()).cell_complex for c in name.split("*")]
         return TensorProductPoint(*components).to_ufl(name)
