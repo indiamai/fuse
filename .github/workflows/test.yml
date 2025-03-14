@@ -64,7 +64,6 @@ jobs:
       #     python -m pip install networkx
       - name: Run tests
         run: |
-          cd /home/firedrake/fuse
           make tests
       - name: Upload coverage
         uses: actions/upload-artifact@v4
