@@ -467,7 +467,7 @@ def test_poisson_analytic(params, elem_gen):
                          [(create_cg1_quad_tensor,), pytest.param(create_cg1_quad, marks=pytest.mark.xfail(reason='Need to allow generation on tensor product quads'))])
 def test_quad(elem_gen):
     elem = elem_gen()
-    # r = 0
+    r = 0
     # m = UnitSquareMesh(2 ** r, 2 ** r, quadrilateral=True)
     ufl_elem = elem.to_ufl()
     assert (run_test(r, ufl_elem, parameters={}, quadrilateral=True) < 1.e-9)
