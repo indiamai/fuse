@@ -31,17 +31,6 @@ jobs:
       - name: Install checkedout fuse
         run: |
           python3 -m pip install --break-system-packages -e '.[docs]'
-      - name: Checkout correct FIAT branch
-        run: |
-          /usr/bin/git config --global --add safe.directory /home/firedrake/
-          cd /home/firedrake/
-          git clone https://github.com/firedrakeproject/fiat.git
-          /usr/bin/git config --global --add safe.directory /home/firedrake/fiat
-          cd fiat
-          git fetch
-          git checkout indiamai/integrate_fuse
-          git status
-          python3 -m pip install --break-system-packages -e .
       - name: Build docs
         run: |
           cd docs

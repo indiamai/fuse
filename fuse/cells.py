@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import itertools
 import networkx as nx
-import fuse.groups as fe_groups
+import fuse.groups as fuse_groups
 import copy
 import sympy as sp
 from matplotlib.patches import FancyArrowPatch
@@ -341,7 +341,7 @@ class Point():
                     if not np.allclose(edge_len, 2):
                         accepted_perms.remove(element)
                         break
-        return fe_groups.PermutationSetRepresentation(list(accepted_perms))
+        return fuse_groups.PermutationSetRepresentation(list(accepted_perms))
 
     def get_spatial_dimension(self):
         return self.dimension
