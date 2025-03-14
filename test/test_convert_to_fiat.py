@@ -4,7 +4,7 @@ from fuse import *
 from firedrake import *
 from sympy.combinatorics import Permutation
 from FIAT.quadrature_schemes import create_quadrature
-from test_2d_examples_docs import construct_nd, construct_rt, construct_cg3
+from test_2d_examples_docs import construct_cg1, construct_nd, construct_rt, construct_cg3
 from test_3d_examples_docs import construct_tet_rt
 from test_polynomial_space import flatten
 from element_examples import CR_n
@@ -90,6 +90,27 @@ def create_cg1(cell):
     Pk = PolynomialSpace(deg)
     cg = ElementTriple(cell, (Pk, CellL2, C0), DOFGenerator(xs, get_cyc_group(len(cell.vertices())), S1))
     return cg
+
+
+def create_cg1_quad():
+    deg = 1
+    # cell = polygon(4)
+    cell = constructCellComplex("quadrilateral").cell_complex
+
+    vert_dg = create_dg1(cell.vertices()[0])
+    xs = [immerse(cell, vert_dg, TrH1)]
+
+    Pk = PolynomialSpace(deg, deg + 1)
+    cg = ElementTriple(cell, (Pk, CellL2, C0), DOFGenerator(xs, get_cyc_group(len(cell.vertices())), S1))
+
+    return cg
+
+
+def create_cg1_quad_tensor():
+    A = construct_cg1()
+    B = construct_cg1()
+    elem = tensor_product(A, B).flatten()
+    return elem
 
 
 def create_cg1_flipped(cell):
@@ -412,11 +433,9 @@ def helmholtz_solve(mesh, V):
 
 def run_test(r, elem, parameters={}, quadrilateral=False):
     # Create mesh and define function space
-    mesh = UnitSquareMesh(2 ** r, 2 ** r, quadrilateral=quadrilateral)
-    x = SpatialCoordinate(mesh)
-    V = FunctionSpace(mesh, elem)
-    print(elem)
-    print(V)
+    m = UnitSquareMesh(2 ** r, 2 ** r, quadrilateral=quadrilateral)
+    x = SpatialCoordinate(m)
+    V = FunctionSpace(m, elem)
     # Define variational problem
     u = Function(V)
     v = TestFunction(V)
@@ -444,14 +463,18 @@ def test_poisson_analytic(params, elem_gen):
     assert (run_test(2, elem.to_ufl(), parameters=params) < 1.e-9)
 
 
-@pytest.mark.parametrize(['params', 'elem_gen'],
-                         [pytest.param(p, d, marks=pytest.mark.xfail(reason='Conversion of non simplex ref els to fiat needed'))
-                          for p in [{}, {'snes_type': 'ksponly', 'ksp_type': 'preonly', 'pc_type': 'lu'}]
-                          for d in (create_cg1,)])
-def test_quad(params, elem_gen):
-    quad = polygon(4)
-    elem = elem_gen(quad)
-    assert (run_test(2, elem.to_ufl(), parameters=params, quadrilateral=True) < 1.e-9)
+@pytest.mark.parametrize(['elem_gen'],
+                         [(create_cg1_quad_tensor,), pytest.param(create_cg1_quad, marks=pytest.mark.xfail(reason='Need to allow generation on tensor product quads'))])
+def test_quad(elem_gen):
+    elem = elem_gen()
+    r = 0
+    # m = UnitSquareMesh(2 ** r, 2 ** r, quadrilateral=True)
+    ufl_elem = elem.to_ufl()
+    assert (run_test(r, ufl_elem, parameters={}, quadrilateral=True) < 1.e-9)
+
+
+def test_non_tensor_quad():
+    create_cg1_quad()
 
 
 @pytest.mark.parametrize("elem_gen,elem_code,deg", [(create_cg2_tri, "CG", 2),
@@ -532,3 +555,10 @@ def test_project_3d(elem_gen, elem_code, deg):
     solve(a == L, out)
 
     assert np.allclose(out.dat.data, f.dat.data, rtol=1e-5)
+
+
+def test_investigate_dpc():
+    mesh = UnitSquareMesh(2, 2, quadrilateral=True)
+
+    U = FunctionSpace(mesh, "DPC", 1)
+    print(U)

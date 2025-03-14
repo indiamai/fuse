@@ -4,15 +4,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import itertools
 import networkx as nx
-import fuse.groups as fe_groups
+import fuse.groups as fuse_groups
 import copy
 import sympy as sp
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 from sympy.combinatorics.named_groups import SymmetricGroup
 from fuse.utils import sympy_to_numpy, fold_reduce
-from FIAT.reference_element import Simplex, UFCQuadrilateral
-from ufl.cell import Cell
+from FIAT.reference_element import Simplex, TensorProductCell as FiatTensorProductCell, Hypercube
+from ufl.cell import Cell, TensorProductCell
 
 
 class Arrow3D(FancyArrowPatch):
@@ -180,6 +180,27 @@ def firedrake_triangle():
     return tri.orient(perm)
 
 
+def firedrake_quad():
+    """
+    Constructs the a quad cell that matches the firedrake default.
+    """
+    vertices = []
+    for i in range(4):
+        vertices.append(Point(0))
+    edges = []
+    # edges.append(Point(1, [vertices[0], vertices[1]], vertex_num=2))
+    # edges.append(Point(1, [vertices[1], vertices[2]], vertex_num=2))
+    # edges.append(Point(1, [vertices[3], vertices[2]], vertex_num=2))
+    # edges.append(Point(1, [vertices[0], vertices[3]], vertex_num=2))
+
+    edges.append(Point(1, [vertices[0], vertices[1]], vertex_num=2))
+    edges.append(Point(1, [vertices[1], vertices[3]], vertex_num=2))
+    edges.append(Point(1, [vertices[2], vertices[3]], vertex_num=2))
+    edges.append(Point(1, [vertices[0], vertices[2]], vertex_num=2))
+
+    return Point(2, edges, vertex_num=4, edge_orientations={2: [1, 0], 3: [1, 0]})
+
+
 def make_tetrahedron():
     vertices = []
     for i in range(4):
@@ -221,11 +242,15 @@ class Point():
 
     id_iter = itertools.count()
 
-    def __init__(self, d, edges=[], vertex_num=None, oriented=False, group=None, edge_orientations={}, cell_id=None):
+    def __init__(self, d, edges=[], vertex_num=None, oriented=False, group=None, edge_orientations=None, cell_id=None):
         if not cell_id:
             cell_id = next(self.id_iter)
         self.id = cell_id
         self.dimension = d
+
+        if edge_orientations is None:
+            edge_orientations = {}
+
         if d == 0:
             assert (edges == [])
         if vertex_num:
@@ -247,7 +272,7 @@ class Point():
 
         self.group = self.group.add_cell(self)
 
-    def compute_attachments(self, n, points, orientations={}):
+    def compute_attachments(self, n, points, orientations=None):
         """
         Compute the attachment function between two nodes
 
@@ -255,6 +280,9 @@ class Point():
         :param: points: List of Point objects
         :param: orientations: (Optional) Orientation associated with the attachment
         """
+        if orientations is None:
+            orientations = {}
+
         if self.dimension == 1:
             edges = [Edge(points[0], sp.sympify((-1,))),
                      Edge(points[1], sp.sympify((1,)))]
@@ -294,7 +322,9 @@ class Point():
 
     def compute_cell_group(self):
         """
-        Systematically work out the symmetry group of the constructed cell
+        Systematically work out the symmetry group of the constructed cell.
+
+        Assumes cell has side length of 2.
         """
         verts = self.ordered_vertices()
         v_coords = [self.get_node(v, return_coords=True) for v in verts]
@@ -311,7 +341,7 @@ class Point():
                     if not np.allclose(edge_len, 2):
                         accepted_perms.remove(element)
                         break
-        return fe_groups.PermutationSetRepresentation(list(accepted_perms))
+        return fuse_groups.PermutationSetRepresentation(list(accepted_perms))
 
     def get_spatial_dimension(self):
         return self.dimension
@@ -558,6 +588,7 @@ class Point():
             plt.show()
         if filename:
             ax.figure.savefig(filename)
+            plt.cla()
 
     def plot3d(self, show=True, ax=None):
         assert self.dimension == 3
@@ -635,16 +666,17 @@ class Point():
         return copy.deepcopy(self)
 
     def to_fiat(self, name=None):
-        if len(self.get_topology()[self.dimension][0]) == self.dimension + 1:
+        if len(self.vertices()) == self.dimension + 1:
             return CellComplexToFiatSimplex(self, name)
-        # raise NotImplementedError("Non-Simplex elements are not yet supported")
-        return CellComplexToFiatCell(self, name)
+        if len(self.vertices()) == 2 ** self.dimension:
+            return CellComplexToFiatHypercube(self, name)
+        raise NotImplementedError("Custom shape elements/ First class quads are not yet supported")
 
     def to_ufl(self, name=None):
         return CellComplexToUFL(self, name)
 
     def _to_dict(self):
-        # think this is probably missing stuf
+        # think this is probably missing stuff
         o_dict = {"dim": self.dimension,
                   "edges": [c for c in self.connections],
                   "oriented": self.oriented,
@@ -713,6 +745,40 @@ class Edge():
         return Edge(o_dict["point"], o_dict["attachment"], o_dict["orientation"])
 
 
+class TensorProductPoint():
+
+    def __init__(self, A, B, flat=False):
+        self.A = A
+        self.B = B
+        self.dimension = self.A.dimension + self.B.dimension
+        self.flat = flat
+
+    def d_entities(self, d, get_class=True):
+        return self.A.d_entities(d, get_class) + self.B.d_entities(d, get_class)
+
+    def vertices(self, get_class=True, return_coords=False):
+        # TODO maybe refactor with get_node
+        verts = self.d_entities(0, get_class)
+        if return_coords:
+            a_verts = self.A.vertices(return_coords=return_coords)
+            b_verts = self.B.vertices(return_coords=return_coords)
+            return [a + b for a in a_verts for b in b_verts]
+        return verts
+
+    def to_ufl(self, name=None):
+        if self.flat:
+            return CellComplexToUFL(self, "quadrilateral")
+        return TensorProductCell(self.A.to_ufl(), self.B.to_ufl())
+
+    def to_fiat(self, name=None):
+        if self.flat:
+            return CellComplexToFiatHypercube(self, CellComplexToFiatTensorProduct(self, name))
+        return CellComplexToFiatTensorProduct(self, name)
+
+    def flatten(self):
+        return TensorProductPoint(self.A, self.B, True)
+
+
 class CellComplexToFiatSimplex(Simplex):
     """
     Convert cell complex to fiat
@@ -724,8 +790,8 @@ class CellComplexToFiatSimplex(Simplex):
 
     def __init__(self, cell, name=None):
         self.fe_cell = cell
-        if name is not None:
-            name = "IndiaDefCell"
+        if name is None:
+            name = "FuseCell"
         self.name = name
 
         # verts = [cell.get_node(v, return_coords=True) for v in cell.ordered_vertices()]
@@ -750,26 +816,25 @@ class CellComplexToFiatSimplex(Simplex):
         return self.construct_subelement(dimension - 1)
 
 
-class CellComplexToFiatCell(UFCQuadrilateral):
+class CellComplexToFiatTensorProduct(FiatTensorProductCell):
     """
     Convert cell complex to fiat
 
-    :param: cell: a fuse cell complex
-
-    Currently assumes simplex.
+    :param: cell: a fuse tensor product cell complex
     """
+    def __new__(cls, cell, name=None, *args, **kwargs):
+        if not isinstance(cell, TensorProductPoint):
+            return cell.to_fiat()
+        return super(CellComplexToFiatTensorProduct, cls).__new__(cls, *args, **kwargs)
 
     def __init__(self, cell, name=None):
         self.fe_cell = cell
-        if name is not None:
-            name = "IndiaDefCell"
+        self.sub_cells = [cell.A.to_fiat(), cell.B.to_fiat()]
+        if name is None:
+            name = " * ".join([s.name for s in self.sub_cells])
         self.name = name
 
-        # verts = [cell.get_node(v, return_coords=True) for v in cell.ordered_vertices()]
-        verts = cell.vertices(return_coords=True)
-        topology = cell.get_topology()
-        shape = cell.get_shape()
-        super(CellComplexToFiatCell, self).__init__(shape, verts, topology)
+        super(CellComplexToFiatTensorProduct, self).__init__(cell.A.to_fiat(), cell.B.to_fiat())
 
     def cellname(self):
         return self.name
@@ -780,7 +845,45 @@ class CellComplexToFiatCell(UFCQuadrilateral):
 
         :arg dimension: subentity dimension (integer)
         """
-        return self.fe_cell.d_entities(dimension)[0].to_fiat()
+        return CellComplexToFiatTensorProduct(*[c.construct_subelement(d).fe_cell for c, d in zip(self.cells, dimension)])
+
+    def get_facet_element(self):
+        dimension = self.get_spatial_dimension()
+        return self.construct_subelement(dimension - 1)
+
+    def flatten(self):
+        return CellComplexToFiatHypercube(self.fe_cell, self)
+
+
+class CellComplexToFiatHypercube(Hypercube):
+    """
+    Convert cell complex to fiat
+
+    :param: cell: a fuse cell complex
+
+    """
+
+    def __init__(self, cell, product):
+        self.fe_cell = cell
+
+        super(CellComplexToFiatHypercube, self).__init__(product)
+
+    def cellname(self):
+        return self.name
+
+    def construct_subelement(self, dimension):
+        """Constructs the reference element of a cell
+        specified by subelement dimension.
+
+        :arg dimension: subentity dimension (integer)
+        """
+        if dimension == self.get_dimension():
+            return self
+        # assumes symmetric tensor product
+        sub_element = self.product.construct_subelement((dimension,) + (0,)*(len(self.product.cells) - 1))
+        if isinstance(sub_element, CellComplexToFiatTensorProduct):
+            return sub_element.flatten()
+        return sub_element
 
     def get_facet_element(self):
         dimension = self.get_spatial_dimension()
@@ -855,9 +958,19 @@ def constructCellComplex(name):
         return polygon(3).to_ufl(name)
         # return firedrake_triangle().to_ufl(name)
     elif name == "quadrilateral":
-        return Cell(name)
+        interval = Point(1, [Point(0), Point(0)], vertex_num=2)
+        return TensorProductPoint(interval, interval).flatten().to_ufl(name)
+        # return firedrake_quad().to_ufl(name)
         # return polygon(4).to_ufl(name)
     elif name == "tetrahedron":
         return make_tetrahedron().to_ufl(name)
+    elif name == "hexahedron":
+        import warnings
+        warnings.warn("Hexahedron unimplemented in Fuse")
+        import ufl
+        return ufl.Cell(name)
+    elif "*" in name:
+        components = [constructCellComplex(c.strip()).cell_complex for c in name.split("*")]
+        return TensorProductPoint(*components).to_ufl(name)
     else:
         raise TypeError("Cell complex construction undefined for {}".format(str(name)))

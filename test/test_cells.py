@@ -164,3 +164,21 @@ def test_ref_els(expect):
     conv1 = np.log2(diff2[:-1] / diff2[1:])
     print("firedrake convergence order:", conv1)
     assert (np.array(conv1) > 3.8).all()
+
+
+def test_comparison():
+    from finat.element_factory import as_fiat_cell
+    from FIAT.reference_element import TensorProductCell
+    name = "quadrilateral"
+    tensor_product = as_fiat_cell(constructCellComplex(name))
+    tensor_product1 = as_fiat_cell(constructCellComplex("interval*interval"))
+
+    print(isinstance(tensor_product, TensorProductCell))
+    print(type(tensor_product).__bases__)
+    print(isinstance(tensor_product1, TensorProductCell))
+    print(type(tensor_product1).__bases__)
+
+    # print(tensor_product >= tensor_product)
+    print(tensor_product >= tensor_product1)
+    # print(tensor_product1 >= tensor_product)
+    # print(tensor_product1 >= tensor_product1)

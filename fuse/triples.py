@@ -1,4 +1,4 @@
-from fuse.cells import Point
+from fuse.cells import Point, TensorProductPoint
 from fuse.spaces.element_sobolev_spaces import ElementSobolevSpace
 from fuse.dof import DeltaPairing, L2Pairing, MyTestFunction, PointKernel
 from fuse.traces import Trace
@@ -25,7 +25,7 @@ class ElementTriple():
     """
 
     def __init__(self, cell, spaces, dof_gen):
-        assert isinstance(cell, Point)
+        assert isinstance(cell, Point) or isinstance(cell, TensorProductPoint)
         if isinstance(dof_gen, DOFGenerator):
             dof_gen = [dof_gen]
         for d in dof_gen:
@@ -43,6 +43,11 @@ class ElementTriple():
                 cell_spaces.append(space)
         self.spaces = tuple(cell_spaces)
         self.DOFGenerator = dof_gen
+        self.flat = False
+
+    def __repr__(self):
+        return "FuseTriple(%s, %s, (%s, %s, %s), %s)" % (
+               repr(self.DOFGenerator), repr(self.cell), repr(self.spaces[0]), repr(self.spaces[1]), repr(self.spaces[2]), "X")
 
     def generate(self):
         res = []
@@ -60,6 +65,10 @@ class ElementTriple():
 
     def num_dofs(self):
         return sum([dof_gen.num_dofs() for dof_gen in self.DOFGenerator])
+
+    def degree(self):
+        # TODO this isn't really correct
+        return self.spaces[0].degree()
 
     def get_dof_info(self, dof):
         if dof.trace_entity.dimension == 0:
