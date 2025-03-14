@@ -34,7 +34,7 @@ jobs:
          # python3 -m pip install --break-system-packages -e .
       - name: Install checkedout fuse
         run: |
-          python3 -m pip install --break-system-packages -e '.[test]'
+          python3 -m pip install --break-system-packages -e '.[dev]'
       - name: Checkout correct FIAT branch
         run: |
           /usr/bin/git config --global --add safe.directory /home/firedrake/
