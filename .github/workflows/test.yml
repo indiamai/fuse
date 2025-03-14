@@ -18,6 +18,10 @@ jobs:
       # Github hosted runners require running as root user:
       # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#docker-container-filesystem
       options: --user root
+      env:
+       # Since we are running as root we need to set PYTHONPATH to be able to find the installed
+       # packages
+       PYTHONPATH: /home/firedrake/firedrake:/home/firedrake/.local/lib/python3.12/site-packages
       volumes:
         - ${{ github.workspace }}:/home/firedrake/output
     # Steps represent a sequence of tasks that will be executed as
