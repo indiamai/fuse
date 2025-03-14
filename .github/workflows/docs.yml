@@ -18,20 +18,21 @@ jobs:
       # Github hosted runners require running as root user:
       # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#docker-container-filesystem
       options: --user root
+      env:
+       # Since we are running as root we need to set PYTHONPATH to be able to find the installed
+       # packages
+       PYTHONPATH: /home/firedrake/firedrake:/home/firedrake/.local/lib/python3.12/site-packages
       volumes:
         - ${{ github.workspace }}:/home/firedrake/output
     # Steps represent a sequence of tasks that will be executed as
     # part of the jobs
     steps:
       - uses: actions/checkout@v4
-      - name: Install checkedout redefining_fe
+      - name: Install checkedout fuse
         run: |
-          . /home/firedrake/firedrake/bin/activate
-          python -m pip install -e .
-
+          python -m pip install break-system-packages -e .
       - name: Build docs
         run: |
-          . /home/firedrake/firedrake/bin/activate
           cd docs
           make html SPHINXOPTS="-W --keep-going -n"
           

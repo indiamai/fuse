@@ -31,11 +31,11 @@ jobs:
           git fetch
           git checkout indiamai/new_def_integration
           git pull
-          python3 -m pip install --break-system-packages -e .
+         # python3 -m pip install --break-system-packages -e .
       - name: Install checkedout fuse
         run: |
-          cd /home/firedrake/fuse
           python3 -m pip install --break-system-packages -e .
+          ls
       - name: Checkout correct FIAT branch
         run: |
           /usr/bin/git config --global --add safe.directory /home/firedrake/
