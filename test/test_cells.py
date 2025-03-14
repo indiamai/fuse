@@ -167,15 +167,10 @@ def test_ref_els(expect):
 
 
 def test_comparison():
-    from fuse.cells import TensorProductPoint
     from finat.element_factory import as_fiat_cell
     from FIAT.reference_element import TensorProductCell
     name = "quadrilateral"
-    interval = Point(1, [Point(0), Point(0)], vertex_num=2)
     tensor_product = as_fiat_cell(constructCellComplex(name))
-
-    interval = Point(1, [Point(0), Point(0)], vertex_num=2)
-    # TensorProductPoint(interval, interval).to_ufl(name)
     tensor_product1 = as_fiat_cell(constructCellComplex("interval*interval"))
 
     print(isinstance(tensor_product, TensorProductCell))

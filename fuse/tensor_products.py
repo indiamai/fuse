@@ -1,7 +1,6 @@
 from fuse.triples import ElementTriple
 from fuse.cells import TensorProductPoint
 from finat.ufl import TensorProductElement, FuseElement
-from ufl import as_cell
 
 
 def tensor_product(A, B):
@@ -36,6 +35,6 @@ class TensorProductTriple(ElementTriple):
 
     def flatten(self):
         return TensorProductTriple(self.A, self.B, flat=True)
-    
+
     def unflatten(self):
         return TensorProductTriple(self.A, self.B, flat=False)

@@ -11,8 +11,8 @@ from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 from sympy.combinatorics.named_groups import SymmetricGroup
 from fuse.utils import sympy_to_numpy, fold_reduce
-from FIAT.reference_element import Simplex, Cell as FiatCell, TensorProductCell as FiatTensorProductCell, Hypercube
-from ufl.cell import Cell, TensorProductCell, as_cell
+from FIAT.reference_element import Simplex, TensorProductCell as FiatTensorProductCell, Hypercube
+from ufl.cell import Cell, TensorProductCell
 
 
 class Arrow3D(FancyArrowPatch):
@@ -744,18 +744,18 @@ class Edge():
     def _from_dict(o_dict):
         return Edge(o_dict["point"], o_dict["attachment"], o_dict["orientation"])
 
+
 class TensorProductPoint():
 
     def __init__(self, A, B, flat=False):
         self.A = A
         self.B = B
-
         self.dimension = self.A.dimension + self.B.dimension
         self.flat = flat
-    
+
     def d_entities(self, d, get_class=True):
         return self.A.d_entities(d, get_class) + self.B.d_entities(d, get_class)
-    
+
     def vertices(self, get_class=True, return_coords=False):
         # TODO maybe refactor with get_node
         verts = self.d_entities(0, get_class)
@@ -777,6 +777,7 @@ class TensorProductPoint():
 
     def flatten(self):
         return TensorProductPoint(self.A, self.B, True)
+
 
 class CellComplexToFiatSimplex(Simplex):
     """
@@ -878,7 +879,7 @@ class CellComplexToFiatHypercube(Hypercube):
         """
         if dimension == self.get_dimension():
             return self
-        #assumes symmetric tensor product
+        # assumes symmetric tensor product
         sub_element = self.product.construct_subelement((dimension,) + (0,)*(len(self.product.cells) - 1))
         if isinstance(sub_element, CellComplexToFiatTensorProduct):
             return sub_element.flatten()
@@ -969,7 +970,7 @@ def constructCellComplex(name):
         import ufl
         return ufl.Cell(name)
     elif "*" in name:
-        components =[constructCellComplex(c.strip()).cell_complex for c in name.split("*")]
+        components = [constructCellComplex(c.strip()).cell_complex for c in name.split("*")]
         return TensorProductPoint(*components).to_ufl(name)
     else:
         raise TypeError("Cell complex construction undefined for {}".format(str(name)))

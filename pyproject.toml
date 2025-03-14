@@ -34,6 +34,7 @@ doc = [
 dev = [
   "pytest",
   "coverage",
+  "flake8",
 ]
 
 

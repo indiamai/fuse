@@ -2,7 +2,8 @@ import pytest
 from fuse import *
 from firedrake import *
 from test_2d_examples_docs import construct_cg1, construct_dg1
-from test_convert_to_fiat import create_cg1
+# from test_convert_to_fiat import create_cg1
+
 
 def helmholtz_solve(mesh, V):
     u = TrialFunction(V)
@@ -16,6 +17,7 @@ def helmholtz_solve(mesh, V):
     solve(a == L, u)
     f.interpolate(cos(x*pi*2)*cos(y*pi*2))
     return sqrt(assemble(dot(u - f, u - f) * dx))
+
 
 def mass_solve(U):
     f = Function(U)
@@ -53,7 +55,7 @@ def test_tensor_product_ext_mesh(generator, code, deg):
 
 
 def test_helmholtz():
-    vals = range(3,6)
+    vals = range(3, 6)
     res = []
     for r in vals:
         m = UnitIntervalMesh(2**r)
@@ -73,7 +75,7 @@ def test_helmholtz():
 
 
 def test_on_quad_mesh():
-    quadrilateral=True
+    quadrilateral = True
     r = 3
     m = UnitSquareMesh(2 ** r, 2 ** r, quadrilateral=quadrilateral)
     A = construct_cg1()
@@ -86,9 +88,10 @@ def test_on_quad_mesh():
     U = FunctionSpace(m, "CG", 1)
     mass_solve(U)
 
+
 def test_quad_mesh_helmholtz():
-    quadrilateral=True
-    vals = range(3,6)
+    quadrilateral = True
+    vals = range(3, 6)
     res_fuse = []
     res_fire = []
     for r in vals:
@@ -99,7 +102,6 @@ def test_quad_mesh_helmholtz():
         elem = tensor_product(A, B).flatten()
         U = FunctionSpace(mesh, elem.to_ufl())
         res_fuse += [helmholtz_solve(mesh, U)]
-
 
         U = FunctionSpace(mesh, "CG", 1)
         res_fire += [helmholtz_solve(mesh, U)]
