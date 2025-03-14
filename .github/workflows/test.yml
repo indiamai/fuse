@@ -34,7 +34,7 @@ jobs:
          # python3 -m pip install --break-system-packages -e .
       - name: Install checkedout fuse
         run: |
-          python3 -m pip install --break-system-packages -e .
+          python3 -m pip install --break-system-packages -e '.[test]'
           ls
       - name: Checkout correct FIAT branch
         run: |
@@ -58,10 +58,6 @@ jobs:
           git checkout indiamai/integrate-fuse
           git status
           python3 -m pip install --break-system-packages -e .
-      # - name: Install networkx 
-      #   run: |
-      #     . /home/firedrake/firedrake/bin/activate
-      #     python -m pip install networkx
       - name: Run tests
         run: |
           make tests
