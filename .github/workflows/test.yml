@@ -14,43 +14,55 @@ jobs:
     # Run on the Github hosted runner
     runs-on: ubuntu-latest
     container:
-      image: firedrakeproject/firedrake:latest
+      image: firedrakeproject/firedrake-vanilla-default:latest
       # Github hosted runners require running as root user:
       # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#docker-container-filesystem
       options: --user root
+      env:
+       # Since we are running as root we need to set PYTHONPATH to be able to find the installed
+       # packages
+       PYTHONPATH: /home/firedrake/firedrake:/home/firedrake/.local/lib/python3.12/site-packages
       volumes:
         - ${{ github.workspace }}:/home/firedrake/output
     # Steps represent a sequence of tasks that will be executed as
     # part of the jobs
     steps:
       - uses: actions/checkout@v4
-      - name: Install checkedout fuse
-        run: |
-          . /home/firedrake/firedrake/bin/activate
-          python -m pip install -e .
-      - name: Checkout correct FIAT branch
-        run: |
-          . /home/firedrake/firedrake/bin/activate
-          /usr/bin/git config --global --add safe.directory /home/firedrake/firedrake/src/fiat
-          cd /home/firedrake/firedrake/src/fiat
-          git fetch
-          git checkout indiamai/integrate_fuse
-          git status
       - name: Checkout correct firedrake branch
         run: |
-          . /home/firedrake/firedrake/bin/activate
-          /usr/bin/git config --global --add safe.directory /home/firedrake/firedrake/src/firedrake
-          cd /home/firedrake/firedrake/src/firedrake
+          /usr/bin/git config --global --add safe.directory /home/firedrake/firedrake
+          cd /home/firedrake/firedrake/
           git fetch
           git checkout indiamai/new_def_integration
           git pull
-      - name: Install networkx 
+      - name: Install checkedout fuse
         run: |
-          . /home/firedrake/firedrake/bin/activate
-          python -m pip install networkx
+          python3 -m pip install --break-system-packages -e '.[dev]'
+      - name: Checkout correct FIAT branch
+        run: |
+          /usr/bin/git config --global --add safe.directory /home/firedrake/
+          cd /home/firedrake/
+          git clone https://github.com/firedrakeproject/fiat.git
+          /usr/bin/git config --global --add safe.directory /home/firedrake/fiat
+          cd fiat
+          git fetch
+          git checkout indiamai/integrate_fuse
+          git status
+          python3 -m pip install --break-system-packages -e .
+      - name: Checkout correct UFL branch
+        run: |
+          /usr/bin/git config --global --add safe.directory /home/firedrake/
+          cd /home/firedrake/
+          git clone https://github.com/firedrakeproject/ufl.git
+          /usr/bin/git config --global --add safe.directory /home/firedrake/ufl
+          cd ufl
+          git fetch
+          git checkout indiamai/integrate-fuse
+          git status
+          python3 -m pip install --break-system-packages -e .
       - name: Run tests
         run: |
-          . /home/firedrake/firedrake/bin/activate
+          pip list
           make tests
       - name: Upload coverage
         uses: actions/upload-artifact@v4
@@ -64,7 +76,7 @@ jobs:
       needs: test
       runs-on: ubuntu-latest
       container:
-        image: firedrakeproject/firedrake:latest
+        image: firedrakeproject/firedrake-vanilla-default:latest
         # Github hosted runners require running as root user:
         # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#docker-container-filesystem
         options: --user root
@@ -75,22 +87,20 @@ jobs:
       steps:
         - name: "Check out the repo"
           uses: "actions/checkout@v2"
-        - name: Checkout correct FIAT branch
-          run: |
-            . /home/firedrake/firedrake/bin/activate
-            /usr/bin/git config --global --add safe.directory /home/firedrake/firedrake/src/fiat
-            cd /home/firedrake/firedrake/src/fiat
-            git fetch
-            git checkout indiamai/integrate_fuse
-            git status
-        - name: Checkout correct firedrake branch
-          run: |
-            . /home/firedrake/firedrake/bin/activate
-            /usr/bin/git config --global --add safe.directory /home/firedrake/firedrake/src/firedrake
-            cd /home/firedrake/firedrake/src/firedrake
-            git fetch
-            git checkout indiamai/new_def_integration
-            git pull
+        # - name: Checkout correct FIAT branch
+        #   run: |
+        #     /usr/bin/git config --global --add safe.directory /home/firedrake/firedrake/src/fiat
+        #     cd /home/firedrake/firedrake/src/fiat
+        #     git fetch
+        #     git checkout indiamai/integrate_fuse
+        #     git status
+        # - name: Checkout correct firedrake branch
+        #   run: |
+        #     /usr/bin/git config --global --add safe.directory /home/firedrake/firedrake/src/firedrake
+        #     cd /home/firedrake/firedrake/src/firedrake
+        #     git fetch
+        #     git checkout indiamai/new_def_integration
+        #     git pull
         - name: "Download coverage data"
           uses: actions/download-artifact@v4
           with:
@@ -98,7 +108,6 @@ jobs:
 
         - name: "Combine"
           run: |
-            . /home/firedrake/firedrake/bin/activate
             make coverage
             export TOTAL=$(python -c "import json;print(json.load(open('coverage.json'))['totals']['percent_covered_display'])")
             echo "total=$TOTAL" >> $GITHUB_ENV
