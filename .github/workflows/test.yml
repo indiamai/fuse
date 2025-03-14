@@ -34,6 +34,7 @@ jobs:
           python3 -m pip install --break-system-packages -e .
       - name: Install checkedout fuse
         run: |
+          cd /home/firedrake/fuse
           python3 -m pip install --break-system-packages -e .
       - name: Checkout correct FIAT branch
         run: |
@@ -46,12 +47,24 @@ jobs:
           git checkout indiamai/integrate_fuse
           git status
           python3 -m pip install --break-system-packages -e .
+      - name: Checkout correct UFL branch
+        run: |
+          /usr/bin/git config --global --add safe.directory /home/firedrake/
+          cd /home/firedrake/
+          git clone https://github.com/firedrakeproject/ufl.git
+          /usr/bin/git config --global --add safe.directory /home/firedrake/ufl
+          cd ufl
+          git fetch
+          git checkout indiamai/integrate-fuse
+          git status
+          python3 -m pip install --break-system-packages -e .
       # - name: Install networkx 
       #   run: |
       #     . /home/firedrake/firedrake/bin/activate
       #     python -m pip install networkx
       - name: Run tests
         run: |
+          cd /home/firedrake/fuse
           make tests
       - name: Upload coverage
         uses: actions/upload-artifact@v4
