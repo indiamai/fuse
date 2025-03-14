@@ -30,7 +30,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install checkedout fuse
         run: |
-          python3 -m pip install break-system-packages -e '.[docs]'
+          python3 -m pip install --break-system-packages -e '.[docs]'
       - name: Build docs
         run: |
           cd docs

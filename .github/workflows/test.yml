@@ -35,7 +35,6 @@ jobs:
       - name: Install checkedout fuse
         run: |
           python3 -m pip install --break-system-packages -e '.[test]'
-          ls
       - name: Checkout correct FIAT branch
         run: |
           /usr/bin/git config --global --add safe.directory /home/firedrake/
@@ -60,6 +59,7 @@ jobs:
           python3 -m pip install --break-system-packages -e .
       - name: Run tests
         run: |
+          pip list
           make tests
       - name: Upload coverage
         uses: actions/upload-artifact@v4
