@@ -753,6 +753,12 @@ class TensorProductPoint():
         self.dimension = self.A.dimension + self.B.dimension
         self.flat = flat
 
+    def get_spatial_dimension():
+        return self.dimension
+    
+    def dimension():
+        return tuple(self.A.dimension, self.B.dimension)
+
     def d_entities(self, d, get_class=True):
         return self.A.d_entities(d, get_class) + self.B.d_entities(d, get_class)
 
@@ -866,7 +872,7 @@ class CellComplexToFiatHypercube(Hypercube):
     def __init__(self, cell, product):
         self.fe_cell = cell
 
-        super(CellComplexToFiatHypercube, self).__init__(sum(product.get_dimension()), product)
+        super(CellComplexToFiatHypercube, self).__init__(product.get_spatial_dimension(), product)
 
     def cellname(self):
         return self.name
