@@ -1,10 +1,10 @@
 name: Check docs build cleanly
 
 on:
-  # Run on pushes to master
+  # Run on pushes to main
   push:
     branches:
-      - master
+      - main
   # And all pull requests
   pull_request:
 
