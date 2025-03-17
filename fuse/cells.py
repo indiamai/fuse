@@ -866,7 +866,7 @@ class CellComplexToFiatHypercube(Hypercube):
     def __init__(self, cell, product):
         self.fe_cell = cell
 
-        super(CellComplexToFiatHypercube, self).__init__(product)
+        super(CellComplexToFiatHypercube, self).__init__(sum(product.get_dimension()), product)
 
     def cellname(self):
         return self.name
