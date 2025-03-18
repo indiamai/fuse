@@ -753,10 +753,10 @@ class TensorProductPoint():
         self.dimension = self.A.dimension + self.B.dimension
         self.flat = flat
 
-    def get_spatial_dimension():
+    def get_spatial_dimension(self):
         return self.dimension
-    
-    def dimension():
+
+    def dimension(self):
         return tuple(self.A.dimension, self.B.dimension)
 
     def d_entities(self, d, get_class=True):
