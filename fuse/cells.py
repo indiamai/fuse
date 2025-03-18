@@ -383,16 +383,12 @@ class Point():
 
         self.topology = {}
         self.topology_unrelabelled = {}
-        self.topology_unrelabelled = {}
         for i in range(len(structure)):
             dimension = structure[i]
             self.topology[i] = {}
             self.topology_unrelabelled[i] = {}
-            self.topology_unrelabelled[i] = {}
             for node in dimension:
                 self.topology[i][node - min_ids[i]] = tuple([relabelled_verts[vert] for vert in self.get_node(node).ordered_vertices()])
-                self.topology_unrelabelled[i][node - min_ids[i]] = tuple([vert - min_ids[0] for vert in self.get_node(node).ordered_vertices()])
-        return self.topology_unrelabelled
                 self.topology_unrelabelled[i][node - min_ids[i]] = tuple([vert - min_ids[0] for vert in self.get_node(node).ordered_vertices()])
         return self.topology_unrelabelled
 
