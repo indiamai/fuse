@@ -225,37 +225,30 @@ def matrix_switch_statement(os):
     string += "default:\nbreak;\n }\n}"
 
     return "".join(string)
-os = {0: np.array([[2,3,4],[3,5,6],[6,7,8]])}
-# print(matrix_switch_statement(os))
+os = {0: np.array([[2,3,4],[3,5,6],[6,7,8]]), 1: np.array([[5,3,6],[8,9,6],[8,7,8]])}
 n = 3
-x = np.random.rand(n, n)
-y = np.random.rand(n, n)
 
-        # g[i, j] = 2*e[i, j] + 3*f[i, j]
 child_knl = lp.make_function(
         "{[i, j]:0<=i, j < 3}",
         """
         res[j] =  res[j] + a[i, j]*b[i]
         """, name="matmul",target=lp.CTarget())
-import ctypes
-args = [lp.GlobalArg("b", dtype=np.float32, shape=(n, )), lp.GlobalArg("a", dtype=np.float32), lp.GlobalArg("res", dtype=np.float32, shape =(n,)),
-        lp.GlobalArg("o", dtype=np.uint8)]
-# mats = []
-# for val in os.keys():
-#     args += [lp.TemporaryVariable(f"mat{val}", initializer=os[val], read_only=True)]
-#     mats += f"mat{val}"
-# mats += "orientation"
-# matrix_switch_statement(os)
-# transform_insn = lp.CInstruction(tuple(), "a = m1", assignees=("a"), read_variables=frozenset(["o", "m1"]))
-transform_insn = lp.CInstruction(tuple(), "a = mat;", assignees=("a"), read_variables=frozenset(["o", "mat"]), id="assign")
-mats = []
+args = [lp.GlobalArg("b", dtype=np.float32, shape=(n, )), lp.TemporaryVariable("a", dtype=np.float32, shape =(n, n)), lp.GlobalArg("res", dtype=np.float32, shape =(n,)),
+        lp.ValueArg("o", dtype=np.int8), lp.GlobalArg("a2", dtype=np.float32, shape =(n, n))]
+mats = ["o"]
+inst = []
+string = [f"\nswitch (o) {{ \n"]
 for val in sorted(os.keys()):
-    mats += [os[val]]
-print(os[0])
-args += [lp.TemporaryVariable(f"mat", initializer=np.array(os[0], dtype=np.float32), dtype=np.float32, read_only=True, address_space=lp.AddressSpace(1))]
+    string += f"case {val}:\n a2 = mat{val};break;\n"
+    inst += [f"""if (o == {val}){{ \n a2 = mat{val};}}\n"""]
+    mats += [f"mat{val}"]
+    args += [lp.TemporaryVariable(f"mat{val}", initializer=np.array(os[val], dtype=np.float32), dtype=np.float32, read_only=True, address_space=lp.AddressSpace(1))]
+string += "default:\nbreak;\n }"
+transform_insn = lp.CInstruction(tuple(), "".join(string), assignees=("a2"), read_variables=frozenset(mats), id="assign")
+
 parent_knl = lp.make_kernel(
         "{:}",
-        [transform_insn, "res[:] = matmul(a, b, res) {dep=assign}"],
+        [transform_insn, "res[:] = matmul(a2, b, res) {dep=assign}"],
         kernel_data=args
         ,target=lp.CTarget())
 knl = lp.merge([parent_knl, child_knl])
