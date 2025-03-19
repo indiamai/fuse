@@ -33,6 +33,7 @@ doc = [
 ]
 dev = [
   "pytest",
+  "pytest-mock",
   "coverage",
   "flake8",
 ]
