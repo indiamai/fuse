@@ -33,10 +33,17 @@ doc = [
 ]
 dev = [
   "pytest",
+  "coverage",
+  "flake8",
 ]
 
 
 [tool.pytest.ini_options]
 testpaths = [
     "tests",
+]
+
+[tool.coverage.run]
+include=[
+    "fuse/*",
 ]

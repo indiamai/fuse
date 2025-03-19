@@ -1,12 +1,15 @@
 from FIAT.polynomial_set import ONPolynomialSet
 from FIAT.quadrature_schemes import create_quadrature
+from FIAT.reference_element import cell_to_simplex
 from FIAT import expansions, polynomial_set, reference_element
 from itertools import chain
 from fuse.utils import tabulate_sympy, max_deg_sp_mat
 import sympy as sp
 import numpy as np
+from functools import total_ordering
 
 
+@total_ordering
 class PolynomialSpace(object):
     """
     contains: the degree of the maximum degree Lagrange space that is spanned by this element. If this
@@ -48,6 +51,7 @@ class PolynomialSpace(object):
         if not isinstance(ref_el, reference_element.Cell):
             ref_el = ref_el.to_fiat()
         sd = ref_el.get_spatial_dimension()
+        ref_el = cell_to_simplex(ref_el)
         if self.set_shape:
             shape = (sd,)
         else:
@@ -95,8 +99,32 @@ class PolynomialSpace(object):
     def __add__(self, x):
         return ConstructedPolynomialSpace([1, 1], [self, x])
 
-    def restrict(self, min_degree, max_degree):
-        return PolynomialSpace(max_degree, contains=-1, mindegree=min_degree, set_shape=self.set_shape)
+    def __eq__(self, other):
+        """these comparison operators are not quite right - better to use a combining function
+        for tensor products TODO"""
+        assert isinstance(other, PolynomialSpace)
+        max_bool = self.maxdegree == other.maxdegree
+        min_bool = self.mindegree == other.mindegree
+        contains = self.contains == other.contains
+        shape = self.set_shape == other.set_shape
+        return max_bool and min_bool and contains and shape
+
+    def __lt__(self, other):
+        """these comparison operators are not quite right - better to use a combining function
+        for tensor products TODO"""
+        assert isinstance(other, PolynomialSpace)
+        if self.maxdegree > other.maxdegree:
+            return True
+        elif self.maxdegree == other.maxdegree:
+            return self.contains >= other.contains
+        return False
+
+    def __hash__(self):
+        """Hash."""
+        return hash((self.set_shape, self.mindegree, self.contains, self.maxdegree))
+
+    def restrict(self, mindegree, maxdegree):
+        return PolynomialSpace(maxdegree, contains=-1, mindegree=mindegree, set_shape=self.set_shape)
 
     def _to_dict(self):
         return {"set_shape": self.set_shape, "min": self.mindegree, "contains": self.contains, "max": self.maxdegree}
@@ -135,6 +163,7 @@ class ConstructedPolynomialSpace(PolynomialSpace):
         k = max([s.maxdegree for s in self.spaces])
         space_poly_sets = [s.to_ON_polynomial_set(ref_el) for s in self.spaces]
         sd = ref_el.get_spatial_dimension()
+        ref_el = cell_to_simplex(ref_el)
 
         if all([w == 1 for w in self.weights]):
             weighted_sets = space_poly_sets

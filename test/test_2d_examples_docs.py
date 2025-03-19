@@ -14,6 +14,13 @@ def construct_dg0():
     return dg0
 
 
+def construct_dg0_int():
+    edge = Point(1, [Point(0), Point(0)], vertex_num=2)
+    xs = [DOF(DeltaPairing(), PointKernel((0,)))]
+    dg1 = ElementTriple(edge, (P0, CellL2, C0), DOFGenerator(xs, S1, S1))
+    return dg1
+
+
 def construct_dg1():
     # [test_dg1_int 0]
     edge = Point(1, [Point(0), Point(0)], vertex_num=2)
@@ -81,14 +88,11 @@ def construct_cg1():
 
     # [test_cg1 2]
     xs = [immerse(edge, dg0, TrH1)]
-    for x in xs:
-        print(type(x))
+
     cg1 = ElementTriple(edge, (P1, CellH1, C0),
                         DOFGenerator(xs, S2, S1))
     # [test_cg1 1]
-    dofs = cg1.generate()
-    for d in dofs:
-        print(type(d))
+
     return cg1
 
 

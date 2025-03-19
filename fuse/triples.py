@@ -1,4 +1,4 @@
-from fuse.cells import Point
+from fuse.cells import Point, TensorProductPoint
 from fuse.spaces.element_sobolev_spaces import ElementSobolevSpace
 from fuse.dof import DeltaPairing, L2Pairing, MyTestFunction, PointKernel
 from fuse.traces import Trace
@@ -25,7 +25,7 @@ class ElementTriple():
     """
 
     def __init__(self, cell, spaces, dof_gen):
-        assert isinstance(cell, Point)
+        assert isinstance(cell, Point) or isinstance(cell, TensorProductPoint)
         if isinstance(dof_gen, DOFGenerator):
             dof_gen = [dof_gen]
         for d in dof_gen:
@@ -125,7 +125,7 @@ class ElementTriple():
                     nodes.append(dofs[i].convert_to_fiat(ref_el, degree))
                     counter += 1
         entity_perms, pure_perm = self.make_dof_perms(ref_el, entity_ids, nodes, poly_set)
-        self.matrices =  self.make_overall_dense_matrices(ref_el, entity_ids, nodes, poly_set)
+        self.matrices = self.make_overall_dense_matrices(ref_el, entity_ids, nodes, poly_set)
         form_degree = 1 if self.spaces[0].set_shape else 0
         print("my", [n.pt_dict for n in nodes])
         print(entity_perms)

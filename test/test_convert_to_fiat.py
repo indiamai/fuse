@@ -4,7 +4,7 @@ from fuse import *
 from firedrake import *
 from sympy.combinatorics import Permutation
 from FIAT.quadrature_schemes import create_quadrature
-from test_2d_examples_docs import construct_nd, construct_rt, construct_cg3
+from test_2d_examples_docs import construct_cg1, construct_nd, construct_rt, construct_cg3
 from test_3d_examples_docs import construct_tet_rt
 from test_polynomial_space import flatten
 from element_examples import CR_n
@@ -90,6 +90,27 @@ def create_cg1(cell):
     Pk = PolynomialSpace(deg)
     cg = ElementTriple(cell, (Pk, CellL2, C0), DOFGenerator(xs, get_cyc_group(len(cell.vertices())), S1))
     return cg
+
+
+def create_cg1_quad():
+    deg = 1
+    # cell = polygon(4)
+    cell = constructCellComplex("quadrilateral").cell_complex
+
+    vert_dg = create_dg1(cell.vertices()[0])
+    xs = [immerse(cell, vert_dg, TrH1)]
+
+    Pk = PolynomialSpace(deg, deg + 1)
+    cg = ElementTriple(cell, (Pk, CellL2, C0), DOFGenerator(xs, get_cyc_group(len(cell.vertices())), S1))
+
+    return cg
+
+
+def create_cg1_quad_tensor():
+    A = construct_cg1()
+    B = construct_cg1()
+    elem = tensor_product(A, B).flatten()
+    return elem
 
 
 def create_cg1_flipped(cell):
@@ -301,7 +322,6 @@ def test_helmholtz(elem_gen, elem_code, deg, conv_rate):
     diff2 = np.array(diff2)
     conv1 = np.log2(diff2[:-1] / diff2[1:])
     print("firedrake convergence order:", conv1)
-    
 
     print("fuse l2 error norms:", diff)
     diff = np.array(diff)
@@ -310,14 +330,6 @@ def test_helmholtz(elem_gen, elem_code, deg, conv_rate):
 
     assert (np.array(conv1) > conv_rate).all()
     assert (np.array(conv2) > conv_rate).all()
-
-# my [{(0.9999999999999998, -0.5773502691896262): [(1.0, ())]}, {(0.0, 1.1547005383792517): [(1.0, ())]}, {(-1.0000000000000002, -0.5773502691896255): [(1.0, ())]}, {(-0.3333333333333334, 0.577350269189626): [(1.0, ())]}, {(-0.6666666666666667, 3.3306690738754696e-16): [(1.0, ())]}, {(-0.33333333333333354, -0.5773502691896258): [(1.0, ())]}, {(0.333333333333333, -0.5773502691896261): [(1.0, ())]}, {(0.6666666666666665, -2.220446049250313e-16): [(1.0, ())]}, {(0.3333333333333333, 0.5773502691896256): [(1.0, ())]}, {(1.3075696143712455e-16, -9.491303112816474e-17): [(1.0, ())]}]
-# {0: {0: {0: [0]}, 1: {0: [0]}, 2: {0: [0]}}, 1: {0: {0: [0, 1], 1: [1, 0]}, 1: {0: [0, 1], 1: [1, 0]}, 2: {0: [0, 1], 1: [1, 0]}}, 2: {0: {0: [0], 4: [0], 3: [0], 1: [0], 2: [0], 5: [0]}}}
-# <FIAT.finite_element.CiarletElement object at 0x7ff920646240>
-# my [{(0.9999999999999998, -0.5773502691896262): [(1.0, ())]}, {(0.0, 1.1547005383792517): [(1.0, ())]}, {(-1.0000000000000002, -0.5773502691896255): [(1.0, ())]}]
-# {0: {0: {0: [0]}, 1: {0: [0]}, 2: {0: [0]}}, 1: {0: {0: [], 1: []}, 1: {0: [], 1: []}, 2: {0: [], 1: []}}, 2: {0: {0: [], 4: [], 3: [], 1: [], 2: [], 5: []}}}
-# l2 error norms: [0.4341573028691119, 0.3880244805894439, 0.39368517563304845]
-# convergence order: [ 0.16207018 -0.02089471]
 
 
 def helmholtz_solve(mesh, V):
@@ -329,10 +341,12 @@ def helmholtz_solve(mesh, V):
     a = (inner(grad(u), grad(v)) + inner(u, v)) * dx
     L = inner(f, v) * dx
     u = Function(V)
-    l_a = assemble(L)
-    elem = V.finat_element.fiat_equivalent
-    W = VectorFunctionSpace(mesh, V.ufl_element())
-    X = assemble(interpolate(mesh.coordinates, W))
+
+    # l_a = assemble(L)
+    # elem = V.finat_element.fiat_equivalent
+    # W = VectorFunctionSpace(mesh, V.ufl_element())
+    # X = assemble(interpolate(mesh.coordinates, W))
+
     solve(a == L, u)
     f.interpolate(cos(x*pi*2)*cos(y*pi*2))
     return sqrt(assemble(dot(u - f, u - f) * dx))
@@ -421,11 +435,9 @@ def helmholtz_solve(mesh, V):
 
 def run_test(r, elem, parameters={}, quadrilateral=False):
     # Create mesh and define function space
-    mesh = UnitSquareMesh(2 ** r, 2 ** r, quadrilateral=quadrilateral)
-    x = SpatialCoordinate(mesh)
-    V = FunctionSpace(mesh, elem)
-    print(elem)
-    print(V)
+    m = UnitSquareMesh(2 ** r, 2 ** r, quadrilateral=quadrilateral)
+    x = SpatialCoordinate(m)
+    V = FunctionSpace(m, elem)
     # Define variational problem
     u = Function(V)
     v = TestFunction(V)
@@ -453,14 +465,18 @@ def test_poisson_analytic(params, elem_gen):
     assert (run_test(2, elem.to_ufl(), parameters=params) < 1.e-9)
 
 
-@pytest.mark.parametrize(['params', 'elem_gen'],
-                         [pytest.param(p, d, marks=pytest.mark.xfail(reason='Conversion of non simplex ref els to fiat needed'))
-                          for p in [{}, {'snes_type': 'ksponly', 'ksp_type': 'preonly', 'pc_type': 'lu'}]
-                          for d in (create_cg1,)])
-def test_quad(params, elem_gen):
-    quad = polygon(4)
-    elem = elem_gen(quad)
-    assert (run_test(2, elem.to_ufl(), parameters=params, quadrilateral=True) < 1.e-9)
+@pytest.mark.parametrize(['elem_gen'],
+                         [(create_cg1_quad_tensor,), pytest.param(create_cg1_quad, marks=pytest.mark.xfail(reason='Need to allow generation on tensor product quads'))])
+def test_quad(elem_gen):
+    elem = elem_gen()
+    r = 0
+    # m = UnitSquareMesh(2 ** r, 2 ** r, quadrilateral=True)
+    ufl_elem = elem.to_ufl()
+    assert (run_test(r, ufl_elem, parameters={}, quadrilateral=True) < 1.e-9)
+
+
+def test_non_tensor_quad():
+    create_cg1_quad()
 
 
 @pytest.mark.parametrize("elem_gen,elem_code,deg", [(create_cg2_tri, "CG", 2),
@@ -541,3 +557,10 @@ def test_project_3d(elem_gen, elem_code, deg):
     solve(a == L, out)
 
     assert np.allclose(out.dat.data, f.dat.data, rtol=1e-5)
+
+
+def test_investigate_dpc():
+    mesh = UnitSquareMesh(2, 2, quadrilateral=True)
+
+    U = FunctionSpace(mesh, "DPC", 1)
+    print(U)
