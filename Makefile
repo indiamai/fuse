@@ -36,11 +36,4 @@ test_cells:
 	@firedrake-clean
 	@python3 -m pytest -rPx --run-cleared test/test_cells.py::test_ref_els[expect1]
 
-test_cells:
-	@echo "    Running all cell comparison tests"
-	@firedrake-clean
-	@python -m pytest -rPx --run-cleared test/test_cells.py::test_ref_els[expect0]
-	@firedrake-clean
-	@python -m pytest -rPx --run-cleared test/test_cells.py::test_ref_els[expect1]
-
 prepush: lint tests doc

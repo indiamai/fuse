@@ -164,23 +164,6 @@ def polygon(n):
 
     return Point(2, edges, vertex_num=n)
 
-def firedrake_triangle():
-    vertices = []
-    for i in range(3):
-        vertices.append(Point(0))
-    edges = []
-    edges.append(
-            Point(1, [vertices[1], vertices[2]], vertex_num=2))
-    edges.append(
-            Point(1, [vertices[0], vertices[2]], vertex_num=2))
-    edges.append(
-            Point(1, [vertices[0], vertices[1]], vertex_num=2))
-    tri = Point(2, edges, vertex_num=3, edge_orientations={1: [1, 0]})
-    # tri = polygon(3)
-    s3 = tri.group
-    perm = s3.get_member([2, 0, 1])
-    return tri.orient(perm)
-
 
 def firedrake_triangle():
     vertices = []
@@ -853,7 +836,6 @@ class CellComplexToFiatTensorProduct(FiatTensorProductCell):
 
         super(CellComplexToFiatTensorProduct, self).__init__(cell.A.to_fiat(), cell.B.to_fiat())
 
-
     def cellname(self):
         return self.name
 
@@ -992,4 +974,3 @@ def constructCellComplex(name):
         return TensorProductPoint(*components).to_ufl(name)
     else:
         raise TypeError("Cell complex construction undefined for {}".format(str(name)))
-

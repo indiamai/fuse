@@ -144,7 +144,7 @@ def test_compare_cell_to_firedrake():
 
 @pytest.fixture
 def mock_cell_complex(mocker, expect):
-    mocker.patch('firedrake.mesh.constructCellComplex', return_value=expect.to_ufl("triangle"))
+    mocker.patch('firedrake.mesh.as_cell', return_value=expect.to_ufl("triangle"))
 
 
 @pytest.mark.skipif("not config.getoption('--run-cleared')", reason="Only run when --run-cleared is given")
@@ -152,7 +152,7 @@ def mock_cell_complex(mocker, expect):
 @pytest.mark.parametrize(["expect"], [(firedrake_triangle(),), (polygon(3),)])
 def test_ref_els(expect):
     scale_range = range(3, 6)
-
+    print(expect)
     diff2 = [0 for i in scale_range]
     for i in scale_range:
         mesh = UnitSquareMesh(2 ** i, 2 ** i)
