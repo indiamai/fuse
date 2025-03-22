@@ -6,7 +6,7 @@ else
 	FLAKE8_FORMAT=
 endif
 
-doc:
+docs:
 	@(cd docs/ && make html)
 
 lint:
@@ -36,4 +36,7 @@ test_cells:
 	@firedrake-clean
 	@python3 -m pytest -rPx --run-cleared test/test_cells.py::test_ref_els[expect1]
 
-prepush: lint tests doc
+clean:
+	@(cd docs/ && make clean)
+
+prepush: lint tests docs

@@ -27,6 +27,7 @@ def test_tet_cg3():
     edge = tetra.edges()[0]
     face = tetra.d_entities(2)[0]
 
+    # [test_tet_cg3 0]
     xs = [DOF(DeltaPairing(), PointKernel(()))]
     dg0 = ElementTriple(vert, (P0, CellL2, "C0"),
                         DOFGenerator(xs, S1, S1))
@@ -50,6 +51,7 @@ def test_tet_cg3():
 
     cg3 = ElementTriple(tetra, (P1, CellH1, "C0"),
                         [cgverts, cgedges, cgfaces])
+    # [test_tet_cg3 1]
 
     x = sp.Symbol("x")
     y = sp.Symbol("y")
@@ -109,6 +111,8 @@ def test_tet_ned():
 
     ned = ElementTriple(tetra, (P1, CellHCurl, "C0"),
                         [edge])
+    # [test_tet_ned 1]
+
     ls = ned.generate()
     # TODO make this a proper test
     for dof in ls:

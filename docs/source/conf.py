@@ -33,16 +33,17 @@ extensions = ['sphinx.ext.autodoc',
               "sphinx.ext.autosectionlabel",
               'sphinx.ext.mathjax',
               'sphinx.ext.intersphinx',
-              "matplotlib.sphinxext.plot_directive"]
+              "matplotlib.sphinxext.plot_directive",
+              "numpydoc"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
-
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
 # nitpick_ignore = [('py:class', 'type')]
+numpydoc_class_members_toctree = False
 
 # -- Autodoc configuration ---------------------------------------------------
 
@@ -55,7 +56,7 @@ autosectionlabel_prefix_document = True
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+html_theme = "haiku"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

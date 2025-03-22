@@ -12,6 +12,7 @@ Welcome to FUSE's documentation!
     spaces
     triples
     dof
-    examples
+    examples2d
+    examples3d
     modules
     serialisation
