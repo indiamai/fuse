@@ -39,7 +39,7 @@ jobs:
           /usr/bin/git config --global --add safe.directory ~/fiat
           cd fiat
           git fetch
-          git checkout indiamai/fuse_new_hypercube
+          git checkout indiamai/integrate_fuse
           git status
           python3 -m pip install --break-system-packages -e .
       - name: Checkout correct UFL branch
