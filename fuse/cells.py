@@ -407,13 +407,6 @@ class Point():
         min_ids = [min(dimension) for dimension in structure]
         return min_ids
 
-    def get_starter_ids(self):
-        structure = [sorted(generation) for generation in nx.topological_generations(self.G)]
-        structure.reverse()
-
-        min_ids = [min(dimension) for dimension in structure]
-        return min_ids
-
     def graph_dim(self):
         if self.oriented:
             dim = self.dimension + 1

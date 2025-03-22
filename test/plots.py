@@ -1,4 +1,4 @@
-# from test_convert_to_fiat import create_cg1
+from fuse import *
 from test_2d_examples_docs import construct_cg3
 # .. plot:: ../../test/plots.py
 

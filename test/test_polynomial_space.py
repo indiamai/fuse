@@ -76,33 +76,6 @@ def test_complete_space(deg):
 
 
 @pytest.mark.parametrize("deg", [1, 2, 3, 4])
-def test_complete_space(deg):
-    cell = n_sided_polygon(3)
-    ref_el = cell.to_fiat()
-    sd = ref_el.get_spatial_dimension()
-
-    Pd = PolynomialSpace(deg, deg)
-    my_space = Pd.to_ON_polynomial_set(cell)
-
-    from FIAT.lagrange import Lagrange
-    lg_space = Lagrange(ref_el, deg).poly_set
-
-    Q = create_quadrature(ref_el, 2*(deg+1))
-    Qpts, _ = Q.get_points(), Q.get_weights()
-    fiat_vals = lg_space.tabulate(Qpts)[(0,) * sd]
-    my_vals = my_space.tabulate(Qpts)[(0,) * sd]
-    fiat_vals = flatten(fiat_vals)
-    my_vals = flatten(my_vals)
-
-    (x, res, _, _) = np.linalg.lstsq(fiat_vals.T, my_vals.T)
-    x1 = np.linalg.inv(x)
-
-    assert np.allclose(np.linalg.norm(my_vals.T - fiat_vals.T @ x), 0)
-    assert np.allclose(np.linalg.norm(fiat_vals.T - my_vals.T @ x1), 0)
-    assert np.allclose(res, 0)
-
-
-@pytest.mark.parametrize("deg", [1, 2, 3, 4])
 def test_rt_construction(deg):
     cell = polygon(3)
     ref_el = cell.to_fiat()

@@ -46,9 +46,6 @@ class PolynomialSpace(object):
     def degree(self):
         return self.maxdegree
 
-    def degree(self):
-        return self.subdegree
-
     def to_ON_polynomial_set(self, ref_el, k=None):
         # how does super/sub degrees work here
         if not isinstance(ref_el, reference_element.Cell):

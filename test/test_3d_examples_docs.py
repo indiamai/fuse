@@ -40,7 +40,7 @@ def test_tet_cg3():
     dg0_face = ElementTriple(face, (P0, CellL2, "C0"),
                              DOFGenerator(xs, S1, S1))
 
-    v_xs = [immerse(tet, dg0, TrH1)]
+    v_xs = [immerse(tetra, dg0, TrH1)]
     cgverts = DOFGenerator(v_xs, Z4, S1)
 
     e_xs = [immerse(tetra, dg1_int, TrH1)]
@@ -49,7 +49,7 @@ def test_tet_cg3():
     f_xs = [immerse(tetra, dg0_face, TrH1)]
     cgfaces = DOFGenerator(f_xs, tet_faces, S1)
 
-    cg3 = ElementTriple(tet, (P1, CellH1, "C0"),
+    cg3 = ElementTriple(tetra, (P1, CellH1, "C0"),
                         [cgverts, cgedges, cgfaces])
     # [test_tet_cg3 1]
 

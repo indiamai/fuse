@@ -190,12 +190,8 @@ def test_nd_example():
 
     ned = construct_nd(tri)
 
-    M = sp.Matrix([[y, -x]])
-    vec_Pk = PolynomialSpace(deg - 1, deg - 1, vec=True)
-    Pk = PolynomialSpace(deg - 1, deg - 1)
-    nd = vec_Pk + (Pk.restrict(deg - 2, deg - 1))*M
-
-    ned = ElementTriple(tri, (nd, CellHCurl, C0), [tri_dofs])
+    x = sp.Symbol("x")
+    y = sp.Symbol("y")
 
     phi_2 = MyTestFunction(sp.Matrix([1/3 - (np.sqrt(3)/6)*y, (np.sqrt(3)/6)*x]), symbols=(x, y))
     phi_0 = MyTestFunction(sp.Matrix([-1/6 - (np.sqrt(3)/6)*y, (-np.sqrt(3)/6) + (np.sqrt(3)/6)*x]), symbols=(x, y))
