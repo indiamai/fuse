@@ -224,7 +224,7 @@ class ElementTriple():
             if g.perm.is_Identity:
                 res_dict[dim][e_id][val] = np.eye(len(nodes))
             else:
-                new_nodes = sum([d(g).convert_to_fiat(ref_el, degree) for d in self.generate()],[])
+                new_nodes = sum([d(g).convert_to_fiat(ref_el, degree) for d in self.generate()], [])
                 transformed_V, transformed_basis = self.compute_dense_matrix(ref_el, entity_ids, new_nodes, poly_set)
                 res_dict[dim][e_id][val] = np.matmul(transformed_basis, original_V.T)
         return res_dict

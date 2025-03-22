@@ -1,8 +1,8 @@
 from firedrake import *
 from fuse import *
-import numpy as np
 from test_convert_to_fiat import create_dg1
 from test_tensor_prod import mass_solve
+
 
 def her_int():
     deg = 3
@@ -13,6 +13,7 @@ def her_int():
     Pk = PolynomialSpace(deg)
     her = ElementTriple(cell, (Pk, CellL2, C0), DOFGenerator(xs, S2, S1))
     return her
+
 
 r = 3
 her1 = her_int()
