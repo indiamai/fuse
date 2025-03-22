@@ -26,7 +26,7 @@ jobs:
           /usr/bin/git config --global --add safe.directory /opt/firedrake/
           cd /opt/firedrake/
           git fetch
-          git checkout indiamai/new_def_integration
+          git checkout indiamai/fuse-quads
           git pull
       - name: Install checkedout fuse
         run: |
@@ -39,7 +39,7 @@ jobs:
           /usr/bin/git config --global --add safe.directory ~/fiat
           cd fiat
           git fetch
-          git checkout indiamai/integrate_fuse
+          git checkout indiamai/fuse_new_hypercube
           git status
           python3 -m pip install --break-system-packages -e .
       - name: Checkout correct UFL branch
