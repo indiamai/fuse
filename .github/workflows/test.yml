@@ -18,7 +18,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as
     # part of the jobs
     steps:
-      - steps:
+      - name: fix home
         run: echo "HOME=/root" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
       - name: Checkout correct firedrake branch
