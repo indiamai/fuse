@@ -1,7 +1,7 @@
 
 Interpolation Spaces
 ========================
-.. automodule:: redefining_fe.spaces.interpolation_spaces
+.. automodule:: fuse.spaces.interpolation_spaces
    :members:
    :show-inheritance:
 
@@ -9,7 +9,7 @@ Interpolation Spaces
 Element Sobolev Spaces
 ========================
 
-.. automodule:: redefining_fe.spaces.element_sobolev_spaces
+.. automodule:: fuse.spaces.element_sobolev_spaces
    :members:
    :exclude-members: ufl.sobolevspace.SobolevSpace
    :show-inheritance:
@@ -18,6 +18,6 @@ Element Sobolev Spaces
 Polynomial Spaces
 =====================
 
-.. automodule:: redefining_fe.spaces.polynomial_spaces
+.. automodule:: fuse.spaces.polynomial_spaces
    :members:
    :show-inheritance:

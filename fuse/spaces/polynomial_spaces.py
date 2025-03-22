@@ -1,34 +1,50 @@
 from FIAT.polynomial_set import ONPolynomialSet
 from FIAT.quadrature_schemes import create_quadrature
+from FIAT.reference_element import cell_to_simplex
 from FIAT import expansions, polynomial_set, reference_element
 from itertools import chain
-from redefining_fe.utils import tabulate_sympy, max_deg_sp_mat
+from fuse.utils import tabulate_sympy, max_deg_sp_mat
 import sympy as sp
 import numpy as np
+from functools import total_ordering
 
 
+@total_ordering
 class PolynomialSpace(object):
     """
-    subdegree: the degree of the maximum degree Lagrange space that is spanned by this element. If this
+    contains: the degree of the maximum degree Lagrange space that is spanned by this element. If this
     element's polynomial space does not include the constant function, this function should
     return -1.
 
-    super degree: the degree of the minimum degree Lagrange space that spans this element.If this
+    maxdegree: the degree of the minimum degree Lagrange space that spans this element.If this
     element contains basis functions that are not in any Lagrange space, this property should
     be None.
+
+    mindegree: the degree of the polynomial in the space with the lowest degree.
 
     Note that on a simplex cells, the polynomial space of Lagrange space is a complete polynomial
     space, but on other cells this is not true. For example, on quadrilateral cells, the degree 1
     Lagrange space includes the degree 2 polynomial xy.
     """
 
-    def __init__(self, subdegree, superdegree, vec=False):
-        self.subdegree = subdegree
-        self.superdegree = superdegree
-        self.vec = vec
+    def __init__(self, maxdegree, contains=None, mindegree=0, set_shape=False):
+        self.maxdegree = maxdegree
+        self.mindegree = mindegree
+
+        if not contains and mindegree == 0:
+            self.contains = maxdegree
+        elif not contains and mindegree >= 0:
+            self.contains = -1
+        else:
+            self.contains = contains
+
+        self.set_shape = set_shape
 
     def complete(self):
-        return self.subdegree == self.superdegree
+        return self.mindegree == self.maxdegree
+
+    def degree(self):
+        return self.maxdegree
 
     def degree(self):
         return self.subdegree
@@ -38,20 +54,33 @@ class PolynomialSpace(object):
         if not isinstance(ref_el, reference_element.Cell):
             ref_el = ref_el.to_fiat()
         sd = ref_el.get_spatial_dimension()
-        if self.vec:
+        ref_el = cell_to_simplex(ref_el)
+        if self.set_shape:
             shape = (sd,)
         else:
             shape = tuple()
 
-        return ONPolynomialSet(ref_el, self.subdegree, shape, scale="orthonormal")
+        if self.mindegree > 0:
+            base_ON = ONPolynomialSet(ref_el, self.maxdegree, shape, scale="orthonormal")
+            dimPmin = expansions.polynomial_dimension(ref_el, self.mindegree)
+            dimPmax = expansions.polynomial_dimension(ref_el, self.maxdegree)
+            if self.set_shape:
+                indices = list(chain(*(range(i * dimPmin, i * dimPmax) for i in range(sd))))
+            else:
+                indices = list(range(dimPmin, dimPmax))
+            restricted_ON = base_ON.take(indices)
+            return restricted_ON
+        return ONPolynomialSet(ref_el, self.maxdegree, shape, scale="orthonormal")
 
     def __repr__(self):
         res = ""
         if self.complete():
-            res += "P" + str(self.subdegree)
+            res += "P" + str(self.maxdegree)
+        elif self.mindegree > 0:
+            res = "P" + "(min " + str(self.mindegree) + " max " + str(self.maxdegree) + ")"
         else:
-            res += "Psub" + str(self.subdegree) + "sup" + str(self.superdegree)
-        if self.vec:
+            res += "Psub" + str(self.contains) + "sup" + str(self.maxdegree)
+        if self.set_shape:
             res += "^d"
         return res
 
@@ -73,74 +102,41 @@ class PolynomialSpace(object):
     def __add__(self, x):
         return ConstructedPolynomialSpace([1, 1], [self, x])
 
-    def restrict(self, min_degree, max_degree):
-        return RestrictedPolynomialSpace(min_degree, max_degree, self.vec)
+    def __eq__(self, other):
+        """these comparison operators are not quite right - better to use a combining function
+        for tensor products TODO"""
+        assert isinstance(other, PolynomialSpace)
+        max_bool = self.maxdegree == other.maxdegree
+        min_bool = self.mindegree == other.mindegree
+        contains = self.contains == other.contains
+        shape = self.set_shape == other.set_shape
+        return max_bool and min_bool and contains and shape
+
+    def __lt__(self, other):
+        """these comparison operators are not quite right - better to use a combining function
+        for tensor products TODO"""
+        assert isinstance(other, PolynomialSpace)
+        if self.maxdegree > other.maxdegree:
+            return True
+        elif self.maxdegree == other.maxdegree:
+            return self.contains >= other.contains
+        return False
+
+    def __hash__(self):
+        """Hash."""
+        return hash((self.set_shape, self.mindegree, self.contains, self.maxdegree))
+
+    def restrict(self, mindegree, maxdegree):
+        return PolynomialSpace(maxdegree, contains=-1, mindegree=mindegree, set_shape=self.set_shape)
 
     def _to_dict(self):
-        return {"vec": self.vec, "sub": self.subdegree, "super": self.superdegree}
+        return {"set_shape": self.set_shape, "min": self.mindegree, "contains": self.contains, "max": self.maxdegree}
 
     def dict_id(self):
         return "PolynomialSpace"
 
     def _from_dict(obj_dict):
-        return PolynomialSpace(obj_dict["sub"], obj_dict["super"], obj_dict["vec"])
-
-
-class RestrictedPolynomialSpace(PolynomialSpace):
-    """
-    Represents a polynomial space of all polynomials between two degrees.
-
-    :param: min_degree: lowest degree polynomials required (-1 to include constants)
-    :param: max_degree: highest degree polynomials required
-    """
-
-    def __new__(cls, min_degree, max_degree, vec=False):
-        if min_degree == -1:
-            # if the restriction is trivial return the original space
-            return PolynomialSpace(max_degree, max_degree, vec)
-        else:
-            return super(RestrictedPolynomialSpace, cls).__new__(cls)
-
-    def __init__(self, min_degree, max_degree, vec=False):
-        self.min_degree = min_degree
-        self.max_degree = max_degree
-
-        super(RestrictedPolynomialSpace, self).__init__(-1, max_degree, vec)
-
-    def __repr__(self):
-        res = "P" + "(min " + str(self.min_degree) + " max " + str(self.max_degree) + ")"
-        if self.vec:
-            res += "^d"
-        return res
-
-    def to_ON_polynomial_set(self, ref_el):
-        if not isinstance(ref_el, reference_element.Cell):
-            ref_el = ref_el.to_fiat()
-        sd = ref_el.get_spatial_dimension()
-
-        dimPmin = expansions.polynomial_dimension(ref_el, self.min_degree)
-        dimPmax = expansions.polynomial_dimension(ref_el, self.max_degree)
-
-        if self.vec:
-            base_ON = polynomial_set.ONPolynomialSet(ref_el, self.max_degree, (sd,), scale="orthonormal")
-        else:
-            base_ON = polynomial_set.ONPolynomialSet(ref_el, self.max_degree, scale="orthonormal")
-
-        indices = list(chain(*(range(i * dimPmin, i * dimPmax) for i in range(sd))))
-        restricted_ON = base_ON.take(indices)
-        return restricted_ON
-
-    def _to_dict(self):
-        super_dict = super(RestrictedPolynomialSpace, self)._to_dict()
-        super_dict["min_degree"] = self.min_degree
-        super_dict["max_degree"] = self.max_degree
-        return super_dict
-
-    def dict_id(self):
-        return "RestrictedPolynomialSpace"
-
-    def _from_dict(obj_dict):
-        return RestrictedPolynomialSpace(obj_dict["min_degree"], obj_dict["max_degree"], obj_dict["vec"])
+        return PolynomialSpace(obj_dict["max"], obj_dict["contains"], obj_dict["min"], obj_dict["set_shape"])
 
 
 class ConstructedPolynomialSpace(PolynomialSpace):
@@ -155,10 +151,11 @@ class ConstructedPolynomialSpace(PolynomialSpace):
         self.weights = weights
         self.spaces = spaces
 
-        subdegree = max([space.subdegree for space in spaces])
-        vec = any([s.vec for s in spaces])
+        maxdegree = max([space.maxdegree for space in spaces])
+        mindegree = min([space.mindegree for space in spaces])
+        vec = any([s.set_shape for s in spaces])
 
-        super(ConstructedPolynomialSpace, self).__init__(subdegree, -1, vec=vec)
+        super(ConstructedPolynomialSpace, self).__init__(maxdegree, -1, mindegree, set_shape=vec)
 
     def __repr__(self):
         return "+".join([str(w) + "*" + str(x) for (w, x) in zip(self.weights, self.spaces)])
@@ -166,9 +163,10 @@ class ConstructedPolynomialSpace(PolynomialSpace):
     def to_ON_polynomial_set(self, ref_el):
         if not isinstance(ref_el, reference_element.Cell):
             ref_el = ref_el.to_fiat()
-        k = max([s.superdegree for s in self.spaces])
+        k = max([s.maxdegree for s in self.spaces])
         space_poly_sets = [s.to_ON_polynomial_set(ref_el) for s in self.spaces]
         sd = ref_el.get_spatial_dimension()
+        ref_el = cell_to_simplex(ref_el)
 
         if all([w == 1 for w in self.weights]):
             weighted_sets = space_poly_sets
@@ -184,8 +182,8 @@ class ConstructedPolynomialSpace(PolynomialSpace):
                 weighted_sets.append(space)
             else:
                 w_deg = max_deg_sp_mat(w)
-                Pkpw = polynomial_set.ONPolynomialSet(ref_el, space.degree + w_deg, scale="orthonormal")
-                vec_Pkpw = polynomial_set.ONPolynomialSet(ref_el, space.degree + w_deg, (sd,), scale="orthonormal")
+                Pkpw = ONPolynomialSet(ref_el, space.degree + w_deg, scale="orthonormal")
+                vec_Pkpw = ONPolynomialSet(ref_el, space.degree + w_deg, (sd,), scale="orthonormal")
 
                 space_at_Qpts = space.tabulate(Qpts)[(0,) * sd]
                 Pkpw_at_Qpts = Pkpw.tabulate(Qpts)[(0,) * sd]
@@ -225,11 +223,11 @@ class ConstructedPolynomialSpace(PolynomialSpace):
         return ConstructedPolynomialSpace(obj_dict["weights"], obj_dict["spaces"])
 
 
-P0 = PolynomialSpace(0, 0)
-P1 = PolynomialSpace(1, 1)
-P2 = PolynomialSpace(2, 2)
-P3 = PolynomialSpace(3, 3)
-P4 = PolynomialSpace(4, 4)
+P0 = PolynomialSpace(0)
+P1 = PolynomialSpace(1)
+P2 = PolynomialSpace(2)
+P3 = PolynomialSpace(3)
+P4 = PolynomialSpace(4)
 
 Q1 = PolynomialSpace(1, 2)
 Q2 = PolynomialSpace(2, 3)

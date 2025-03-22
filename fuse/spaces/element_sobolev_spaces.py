@@ -1,3 +1,7 @@
+from functools import total_ordering
+
+
+@total_ordering
 class ElementSobolevSpace(object):
     """
     Representation of a Sobolev space on a single cell
@@ -14,6 +18,14 @@ class ElementSobolevSpace(object):
     def __lt__(self, other):
         """In common with intrinsic Python sets, < indicates "is a proper subset of"."""
         return any([isinstance(other, p) for p in self.parents])
+
+    def __eq__(self, other):
+        """ specifically do not check domain"""
+        return repr(self) == repr(other)
+
+    def __hash__(self):
+        """Hash."""
+        return hash(("ElementSobolevSpace", str(self)))
 
     def _to_dict(self):
         return {"space": str(self)}

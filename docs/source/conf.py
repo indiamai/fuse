@@ -47,7 +47,7 @@ numpydoc_class_members_toctree = False
 
 # -- Autodoc configuration ---------------------------------------------------
 
-autodoc_mock_imports = ["firedrake", "networkx", "FIAT"]
+autodoc_mock_imports = ["firedrake", "networkx", "FIAT", "finat"]
 
 # Make sure the target is unique
 autosectionlabel_prefix_document = True
@@ -64,9 +64,8 @@ html_theme = "haiku"
 # html_static_path = ['_static']
 
 intersphinx_mapping = {
-    'ufl': ('https://fenics.readthedocs.io/projects/ufl/en/latest/', None),
-    'FIAT': ('https://fenics.readthedocs.io/projects/fiat/en/latest/', None),
-    'FInAT': ('https://finat.github.io/FInAT/', None),
+    'ufl': ('https://docs.fenicsproject.org/ufl/main/', None),
+    'FIAT': ('https://firedrakeproject.org/fiat', None),
     'matplotlib': ('https://matplotlib.org/', None),
     'python': ('https://docs.python.org/3/', None),
     'numpy': ('https://numpy.org/doc/stable/', None)}

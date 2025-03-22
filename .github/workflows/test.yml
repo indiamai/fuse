@@ -1,71 +1,104 @@
 name: Run tests
 
 on:
-  # Run on pushes to master
+  # Run on pushes to main
   push:
     branches:
-      - master
+      - main
   # And all pull requests
   pull_request:
 
 jobs:
-  build_docs:
+  test:
     name: Run tests
     # Run on the Github hosted runner
     runs-on: ubuntu-latest
     container:
-      image: firedrakeproject/firedrake-docdeps:latest
-      # Github hosted runners require running as root user:
-      # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#docker-container-filesystem
-      options: --user root
-      volumes:
-        - ${{ github.workspace }}:/home/firedrake/output
+      image: firedrakeproject/firedrake-vanilla-default:latest
     # Steps represent a sequence of tasks that will be executed as
     # part of the jobs
     steps:
+      - name: fix home
+        run: echo "HOME=/root" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
-      - name: Install checkedout redefining_fe
-        run: |
-          . /home/firedrake/firedrake/bin/activate
-          python -m pip install -e .
-      - name: Checkout correct FIAT branch
-        run: |
-          . /home/firedrake/firedrake/bin/activate
-          /usr/bin/git config --global --add safe.directory /home/firedrake/firedrake/src/fiat
-          cd /home/firedrake/firedrake/src/fiat
-          git checkout indiamai/union_different_coeff_size
-          git status
       - name: Checkout correct firedrake branch
         run: |
-          . /home/firedrake/firedrake/bin/activate
-          /usr/bin/git config --global --add safe.directory /home/firedrake/firedrake/src/firedrake
-          cd /home/firedrake/firedrake/src/firedrake
-          git checkout indiamai/new_def_integration
-      - name: Checkout correct FInAT branch
+          /usr/bin/git config --global --add safe.directory /opt/firedrake/
+          cd /opt/firedrake/
+          git fetch
+          git checkout indiamai/fuse-quads
+          git pull
+      - name: Install checkedout fuse
         run: |
-          . /home/firedrake/firedrake/bin/activate
-          /usr/bin/git config --global --add safe.directory /home/firedrake/firedrake/src/FInAT
-          cd /home/firedrake/firedrake/src/FInAT
-          git checkout indiamai/new_def_integration
-      - name: Checkout correct tsfc branch
+          python3 -m pip install --break-system-packages -e '.[dev]'
+      - name: Checkout correct FIAT branch
         run: |
-          . /home/firedrake/firedrake/bin/activate
-          /usr/bin/git config --global --add safe.directory /home/firedrake/firedrake/src/tsfc
-          cd /home/firedrake/firedrake/src/tsfc
-          git checkout indiamai/new_def_integration
-      - name: Install networkx 
+          /usr/bin/git config --global --add safe.directory ~/
+          cd ~
+          git clone https://github.com/firedrakeproject/fiat.git
+          /usr/bin/git config --global --add safe.directory ~/fiat
+          cd fiat
+          git fetch
+          git checkout indiamai/integrate_fuse
+          git status
+          python3 -m pip install --break-system-packages -e .
+      - name: Checkout correct UFL branch
         run: |
-          . /home/firedrake/firedrake/bin/activate
-          python -m pip install networkx
-      - name: Pip list
-        run: |
-          . /home/firedrake/firedrake/bin/activate
-          pip list
-      - name: Firedrake status
-        run: |
-          . /home/firedrake/firedrake/bin/activate
-          firedrake-status
+          /usr/bin/git config --global --add safe.directory ~
+          cd ~
+          git clone https://github.com/firedrakeproject/ufl.git
+          /usr/bin/git config --global --add safe.directory ~/ufl
+          cd ufl
+          git fetch
+          git checkout indiamai/integrate-fuse
+          git status
+          python3 -m pip install --break-system-packages -e .
       - name: Run tests
         run: |
-          . /home/firedrake/firedrake/bin/activate
+          pip list
           make tests
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: covdata
+          include-hidden-files: true
+          path: .coverage.*
+
+  coverage:
+      name: Coverage
+      needs: test
+      runs-on: ubuntu-latest
+      container:
+        image: firedrakeproject/firedrake-vanilla-default:latest
+      # Steps represent a sequence of tasks that will be executed as
+      # part of the jobs
+      steps:
+        - name: "Check out the repo"
+          uses: "actions/checkout@v2"
+        - name: Install checkedout fuse
+          run: |
+            python3 -m pip install --break-system-packages -e '.[dev]'
+        - name: "Download coverage data"
+          uses: actions/download-artifact@v4
+          with:
+            name: covdata
+
+        - name: "Combine"
+          run: |
+            make coverage
+            export TOTAL=$(python -c "import json;print(json.load(open('coverage.json'))['totals']['percent_covered_display'])")
+            echo "total=$TOTAL" >> $GITHUB_ENV
+            echo "### Total coverage: ${TOTAL}%" >> $GITHUB_STEP_SUMMARY
+
+        - name: "Make badge"
+          uses: schneegans/dynamic-badges-action@v1.4.0
+          with:
+            # GIST_TOKEN is a GitHub personal access token with scope "gist".
+            auth: ${{ secrets.GIST_SECRET }}
+            gistID: 8d09e14999153441dba99d1759e90707  # replace with your real Gist id.
+            filename: covbadge.json
+            label: Coverage
+            message: ${{ env.total }}%
+            minColorRange: 50
+            maxColorRange: 90
+            valColorRange: ${{ env.total }}

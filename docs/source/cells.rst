@@ -2,7 +2,7 @@ Cells
 ============
 
 
-.. automodule:: redefining_fe.cells
+.. automodule:: fuse.cells
    :members:
    :exclude-members: Arrow3D
    :show-inheritance:

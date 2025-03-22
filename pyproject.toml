@@ -1,0 +1,49 @@
+[build-system]
+requires = [
+  "setuptools",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fuse-element"
+version = "0.1.1"
+authors = [
+  {name = "India Marsden", email = "marsden@maths.ox.ac.uk"},
+]
+description = "a unified, serialisable representation of a Finite Element"
+readme = "README.md"
+classifiers = [
+  "Programming Language :: Python",
+  "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
+]
+dependencies = [
+  "numpy",
+  "networkx",
+  "sympy",
+  "sphinx",
+  "matplotlib",
+]
+
+[project.urls]
+Repository = "https://github.com/indiamai/fuse.git"
+
+[project.optional-dependencies]
+doc = [
+  "sphinx",
+]
+dev = [
+  "pytest",
+  "coverage",
+  "flake8",
+]
+
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
+
+[tool.coverage.run]
+include=[
+    "fuse/*",
+]

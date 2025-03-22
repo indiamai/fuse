@@ -1,6 +1,6 @@
 Groups
 ============
 
-.. automodule:: redefining_fe.groups
+.. automodule:: fuse.groups
    :members:
    :show-inheritance:

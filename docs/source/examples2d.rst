@@ -25,7 +25,7 @@ DG1 on interval
 ..
     .. plot::
 
-        from redefining_fe import *
+        from fuse import *
         edge = Point(1, [Point(0, group=S1), Point(0, group=S1)], vertex_num=2, group=S2)
         xs = [DOF(DeltaPairing(), PointKernel((-1,)))]
         dg1 = ElementTriple(edge, (P1, CellL2, C0), DOFGenerator(xs, S2, S1))

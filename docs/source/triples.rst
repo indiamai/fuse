@@ -1,6 +1,6 @@
 Triples
 ==============
 
-.. automodule:: redefining_fe.triples
+.. automodule:: fuse.triples
    :members:
    :show-inheritance:

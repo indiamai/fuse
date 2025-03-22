@@ -3,4 +3,4 @@ ignore =
     E501,F403,F405,E226,E402,E721,E731,E741,W503,F999,
     N801,N802,N803,N806,N807,N811,N813,N814,N815,N816
 exclude = .git,__pycache__,build,.tox,dist,firedrake/_version.py
-per-file-ignores = redefining_fe/__init__.py:F401
+per-file-ignores = fuse/__init__.py:F401

@@ -1,4 +1,4 @@
-from redefining_fe import *
+from fuse import *
 
 
 def test_comparison():

@@ -1,14 +1,26 @@
 import json
-from redefining_fe import *
-from redefining_fe.spaces.polynomial_spaces import RestrictedPolynomialSpace, ConstructedPolynomialSpace
-from redefining_fe.spaces.element_sobolev_spaces import ElementSobolevSpace
-from redefining_fe.spaces.interpolation_spaces import InterpolationSpace
-from redefining_fe.traces import Trace
-from redefining_fe.triples import ImmersedDOFs
+from fuse import *
+from fuse.spaces.polynomial_spaces import ConstructedPolynomialSpace
+from fuse.spaces.element_sobolev_spaces import ElementSobolevSpace
+from fuse.spaces.interpolation_spaces import InterpolationSpace
+from fuse.traces import Trace
+from fuse.triples import ImmersedDOFs
 import sympy as sp
 
 
 class ElementSerialiser():
+    """
+    This class provides encoding and decoding to json for objects in the
+    fuse language.
+
+    Methods
+    --------
+
+    encode: obj: fuse class
+        - converts object to a json representation
+    decode: obj_str: String
+        - converts json string to obj
+    """
 
     def __init__(self):
         self.obj_id_counter = {}
@@ -22,13 +34,12 @@ class ElementSerialiser():
                           "SobolevSpace": ElementSobolevSpace,
                           "InterpolationSpace": InterpolationSpace,
                           "PolynomialSpace": PolynomialSpace,
-                          "RestrictedPolynomialSpace": RestrictedPolynomialSpace,
                           "ConstructedPolynomialSpace": ConstructedPolynomialSpace,
                           "DOF": DOF,
                           "ImmersedDOF": ImmersedDOFs,
                           "DOFGen": DOFGenerator,
                           "Delta": DeltaPairing,
-                          "L2Inner": L2InnerProd,
+                          "L2Inner": L2Pairing,
                           "PolynomialKernel": PolynomialKernel,
                           "PointKernel": PointKernel,
                           "Trace": Trace

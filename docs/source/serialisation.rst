@@ -1,6 +1,6 @@
-DOFs
+Serialisation
 ==============
 
-.. automodule:: fuse.dof
+.. automodule:: fuse.serialisation
    :members:
    :show-inheritance:

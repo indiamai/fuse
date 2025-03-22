@@ -1,4 +1,3 @@
-from redefining_fe import *
 # from test_convert_to_fiat import create_cg1
 from test_2d_examples_docs import construct_cg3
 # .. plot:: ../../test/plots.py
@@ -14,7 +13,7 @@ def construct_dg1():
 
 
 def plot_dg1():
-    # tri = n_sided_polygon(3)
+    # tri = polygon(3)
     # cg1 = create_cg1(tri)
     cg3 = construct_cg3()
     # dg1 = construct_dg1()
