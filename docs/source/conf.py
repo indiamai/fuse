@@ -63,9 +63,8 @@ html_theme = 'alabaster'
 # html_static_path = ['_static']
 
 intersphinx_mapping = {
-    'ufl': ('https://fenics.readthedocs.io/projects/ufl/en/latest/', None),
-    'FIAT': ('https://fenics.readthedocs.io/projects/fiat/en/latest/', None),
-    'FInAT': ('https://finat.github.io/FInAT/', None),
+    'ufl': ('https://docs.fenicsproject.org/ufl/main/', None),
+    'FIAT': ('https://firedrakeproject.org/fiat', None),
     'matplotlib': ('https://matplotlib.org/', None),
     'python': ('https://docs.python.org/3/', None),
     'numpy': ('https://numpy.org/doc/stable/', None)}
