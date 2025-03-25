@@ -10,6 +10,8 @@ on:
 
 jobs:
   build_docs:
+    permissions:
+      contents: write
     name: Run doc build and deploy
     # Run on the Github hosted runner
     runs-on: ubuntu-latest
