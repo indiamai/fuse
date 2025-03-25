@@ -138,6 +138,78 @@ class ElementTriple():
         else:
             dual = DualSet(nodes, ref_el, entity_ids)
         return CiarletElement(poly_set, dual, degree, form_degree)
+    
+    def to_basix(self):
+        ref_el = self.cell.to_fiat()
+        dofs = self.generate()
+        degree = self.spaces[0].degree()
+        spdim = ref_el.get_spatial_dimension()
+        x_pts = []
+        
+        entity_perms = {}
+        nodes = []
+        top = ref_el.get_topology()
+        min_ids = self.cell.get_starter_ids()
+        poly_set = self.spaces[0].to_ON_polynomial_set(ref_el)
+        xs = [[] for dim in sorted(top)]
+        Ms = [[] for dim in sorted(top)]
+
+        entities = [(dim, entity) for dim in sorted(top) for entity in sorted(top[dim])]
+        for entity in entities:
+            dof_added = False
+            dim = entity[0]
+            for i in range(len(dofs)):
+                if entity[1] == dofs[i].trace_entity.id - min_ids[dim]:
+                    dof_added = True
+                    converted = dofs[i].convert_to_fiat(ref_el, degree)
+                    pt_dict = converted.pt_dict
+                    value_shape = converted.target_shape
+                    dof_keys = list((pt_dict.keys()))
+                    dof_M = []
+                    for d in dof_keys:
+                        wts = []
+                        for pt in pt_dict[d]:
+                            if len(value_shape) > 1:
+                                wt = np.zeros_like(value_shape)
+                                wt[pt[1]] = pt[0]
+                            else:
+                                wt = [pt[0]]
+                            wts.append(wt)
+                        dof_M.append(wts)
+                    derivs = converted.max_deriv_order 
+                    if derivs == 0:
+                        M = np.array([dof_M])
+                    else:
+                        raise NotImplementedError("Derivatives need adding")
+                    xs[dim].append(np.array(dof_keys))
+                    Ms[dim].append(M)
+            if not dof_added:
+                xs[dim].append(np.zeros((0, spdim)))
+                Ms[dim].append(np.zeros((0, spdim, 0, 1)))
+        
+        # remove when basix does this for me
+        if len(xs) < 4:
+            for _ in range(4 - len(xs)):
+                xs.append([])
+        if len(Ms) < 4:
+            for _ in range(4 - len(Ms)):
+                Ms.append([])
+            
+        element = basix.create_custom_element(
+            CellType.interval,
+            [],
+            polyset.coeffs,
+            x,
+            M,
+            0,
+            MapType.identity,
+            SobolevSpace.H1,
+            False,
+            1,
+            1,
+            PolysetType.standard,
+        )
+        return xs, Ms
 
     def plot(self, filename="temp.png"):
         # point evaluation nodes only

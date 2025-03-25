@@ -22,10 +22,11 @@ dependencies = [
   "sympy",
   "sphinx",
   "matplotlib",
+  "basix"
 ]
 
 [project.urls]
-Repository = "https://github.com/indiamai/fuse.git"
+Repository = "https://github.com/firedrakeproject/fuse.git"
 
 [project.optional-dependencies]
 doc = [
