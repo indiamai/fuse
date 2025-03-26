@@ -2,6 +2,7 @@ import numpy as np
 import sympy as sp
 import itertools
 
+
 def construct_attach_2d(a, b, c, d):
     """
     Compute polynomial attachment in x based on two points (a,b) and (c,d)
@@ -88,6 +89,7 @@ def compute_equilateral_verts(d, n):
     else:
         raise ValueError("Dimension {} not supported".format(d))
 
+
 def compute_ufc_verts(d, n):
     """
     Construct UFC cell vertices
@@ -105,26 +107,38 @@ def compute_ufc_verts(d, n):
         raise NotImplementedError(f"Not able to construct cell in {d} dimensions with {n} vertices.")
 
     # remove duplicates, sort starting with first element, convert to np float
-    vertices = np.array(sorted(list(set(itertools.permutations(values, d))), key = lambda x: x[::-1]), dtype=np.float64)
-    
+    vertices = np.array(sorted(list(set(itertools.permutations(values, d))), key=lambda x: x[::-1]), dtype=np.float64)
+
     if d == 3:
-        raise NotImplementedError(f"Need to construct faces in 3D")
+        raise NotImplementedError("Need to construct UFC faces in 3D")
         if n == 4:
             faces = set(itertools.permutations(vertices, 3))
             print(faces)
         elif n == 8:
             faces = set(itertools.permutations(vertices, 4))
-        # print(faces)
         return vertices
     return vertices
+
 
 coord_variants = {"equilateral": compute_equilateral_verts,
                   "ufc": compute_ufc_verts}
 
+
+def compute_attachment_1d(n, variant="equilateral"):
+    """
+    Constructs sympy functions for attaching the points of
+    n vertices and coordinates determined by variant.
+
+    :param: n: number of vertices
+    :param: variant: vertex type"""
+    coords = coord_variants[variant](1, n)
+    return [sp.sympify(tuple(c)) for c in coords]
+
+
 def compute_attachment_2d(n, variant="equilateral"):
     """
-    Constructs sympy functions for attaching the edges of a 
-    polygon with n vertices and vertices determined by variant.
+    Constructs sympy functions for attaching the edges of a
+    polygon with n vertices and coordinates determined by variant.
 
     :param: n: number of vertices
     :param: variant: vertex type"""
@@ -137,7 +151,7 @@ def compute_attachment_2d(n, variant="equilateral"):
 
         attachments.append(construct_attach_2d(a, b, c, d))
     return attachments
-        
+
 
 def compute_attachment_3d(n, variant="equilateral"):
     coords, faces = compute_equilateral_verts(3, n)
@@ -153,7 +167,6 @@ def compute_attachment_3d(n, variant="equilateral"):
         assert np.allclose(np.array(res_fn.subs({"x": coords_2d[0][1], "y": coords_2d[0][2]})).astype(np.float64), faces[i][0])
         assert np.allclose(np.array(res_fn.subs({"x": coords_2d[1][1], "y": coords_2d[1][2]})).astype(np.float64), faces[i][1])
         assert np.allclose(np.array(res_fn.subs({"x": coords_2d[2][1], "y": coords_2d[2][2]})).astype(np.float64), faces[i][2])
-        
+
         attachments.append(construct_attach_3d(res))
     return attachments
-        

@@ -11,7 +11,7 @@ from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 from sympy.combinatorics.named_groups import SymmetricGroup
 from fuse.utils import sympy_to_numpy, fold_reduce
-from fuse.geometry import compute_attachment_2d, compute_attachment_3d
+from fuse.geometry import compute_attachment_1d, compute_attachment_2d, compute_attachment_3d
 from FIAT.reference_element import Simplex, TensorProductCell as FiatTensorProductCell, Hypercube
 from ufl.cell import Cell, TensorProductCell
 
@@ -202,8 +202,7 @@ class Point():
             orientations = {}
 
         if self.dimension == 1:
-            return [Edge(points[0], sp.sympify((-1,))),
-                    Edge(points[1], sp.sympify((1,)))]
+            attachments = compute_attachment_1d(n, variant)
         if self.dimension == 2:
             attachments = compute_attachment_2d(n, variant)
         if self.dimension == 3:
@@ -413,9 +412,15 @@ class Point():
         return reordered_entities
 
     def basis_vectors(self, return_coords=True, entity=None):
+        """
+        Compute basis vectors of the cell defined as:
+            t_i = v_{i+1} - v_0
+
+        Orientation comes from ordered_vertices - using self.graph() to avoid orientation in G.
+        """
         if not entity:
             entity = self
-        self_levels = [sorted(generation) for generation in nx.topological_generations(self.G)]
+        self_levels = [sorted(generation) for generation in nx.topological_generations(self.graph())]
         vertices = entity.ordered_vertices()
         if self.dimension == 0:
             raise ValueError("Dimension 0 entities cannot have Basis Vectors")
@@ -535,7 +540,6 @@ class Point():
                     vals = [fold_reduce(attachment, *tuple(basis[i].tolist()))
                             for attachment in attachments]
                     assert all(np.isclose(val, vals[0]).all() for val in vals)
-
 
         return lambda *x: fold_reduce(attachments[0], *x)
 

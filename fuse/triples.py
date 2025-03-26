@@ -138,19 +138,16 @@ class ElementTriple():
         else:
             dual = DualSet(nodes, ref_el, entity_ids)
         return CiarletElement(poly_set, dual, degree, form_degree)
-    
+
     def to_basix(self):
         ref_el = self.cell.to_fiat()
         dofs = self.generate()
         degree = self.spaces[0].degree()
         spdim = ref_el.get_spatial_dimension()
-        x_pts = []
-        
-        entity_perms = {}
-        nodes = []
+
         top = ref_el.get_topology()
         min_ids = self.cell.get_starter_ids()
-        poly_set = self.spaces[0].to_ON_polynomial_set(ref_el)
+        polyset = self.spaces[0].to_ON_polynomial_set(ref_el)
         xs = [[] for dim in sorted(top)]
         Ms = [[] for dim in sorted(top)]
 
@@ -176,7 +173,7 @@ class ElementTriple():
                                 wt = [pt[0]]
                             wts.append(wt)
                         dof_M.append(wts)
-                    derivs = converted.max_deriv_order 
+                    derivs = converted.max_deriv_order
                     if derivs == 0:
                         M = np.array([dof_M])
                     else:
@@ -186,7 +183,7 @@ class ElementTriple():
             if not dof_added:
                 xs[dim].append(np.zeros((0, spdim)))
                 Ms[dim].append(np.zeros((0, spdim, 0, 1)))
-        
+
         # remove when basix does this for me
         if len(xs) < 4:
             for _ in range(4 - len(xs)):
@@ -194,21 +191,22 @@ class ElementTriple():
         if len(Ms) < 4:
             for _ in range(4 - len(Ms)):
                 Ms.append([])
-            
-        element = basix.create_custom_element(
-            CellType.interval,
-            [],
-            polyset.coeffs,
-            x,
-            M,
-            0,
-            MapType.identity,
-            SobolevSpace.H1,
-            False,
-            1,
-            1,
-            PolysetType.standard,
-        )
+
+        print(polyset.coeffs)
+        # element = basix.create_custom_element(
+        #     CellType.interval,
+        #     [],
+        #     polyset.coeffs,
+        #     x,
+        #     M,
+        #     0,
+        #     MapType.identity,
+        #     SobolevSpace.H1,
+        #     False,
+        #     1,
+        #     1,
+        #     PolysetType.standard,
+        # )
         return xs, Ms
 
     def plot(self, filename="temp.png"):

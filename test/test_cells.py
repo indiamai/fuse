@@ -38,9 +38,15 @@ def test_basis_vectors(C):
 def test_orientation():
     cell = Point(1, [Point(0), Point(0)], vertex_num=2)
     print(cell.get_topology())
+    print(cell.ordered_vertices())
+    print(np.array(cell.basis_vectors()))
+    print(np.array(cell.basis_vectors(return_coords=True)[0]))
     for g in cell.group.members():
         if not g.perm.is_Identity:
             oriented = cell.orient(g)
+            print(oriented.ordered_vertices())
+            print(np.array(oriented.basis_vectors()))
+            print(np.array(oriented.basis_vectors(return_coords=True)[0]))
             assert np.allclose(np.array(oriented.basis_vectors(return_coords=True)[0]), -1)
 
 
