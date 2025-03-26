@@ -35,9 +35,7 @@ dev = [
   "pytest",
   "coverage",
   "flake8",
-]
-basix = [
-    "basix",
+  "basix",
 ]
 
 [tool.setuptools]
