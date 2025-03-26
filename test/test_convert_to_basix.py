@@ -16,7 +16,10 @@ def create_cg1(cell):
 
 @pytest.mark.skipbasix
 def test_basix_conversion():
-    cell = cell = Point(1, [Point(0), Point(0)], vertex_num=2)
+    cell = Point(1, [Point(0), Point(0)], vertex_num=2)
+    print("original", cell.vertices(return_coords=True))
+    cell = Point(1, [Point(0), Point(0)], vertex_num=2, variant="ufc", group=S2)
+    print("ufc", cell.vertices(return_coords=True))
     cg1 = create_cg1(cell)
     element = cg1.to_basix()
 
@@ -28,7 +31,7 @@ def test_basix_conversion():
 def test_cells():
     import basix
     from basix import CellType
-    from fuse_basix.basix_interface import right_angled_tri, transform_points
+    from fuse_basix.basix_interface import ufc_triangle, transform_points, transform_to_basix_cell
 
     print(basix.cell.geometry(CellType.triangle))
     print(basix.cell.topology(CellType.triangle))

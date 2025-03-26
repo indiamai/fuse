@@ -41,6 +41,7 @@ def convert_to_basix_sobolev(sobolev_space):
 
 def convert_to_basix_element(triple, x, M, polyset):
     value_shape = list(triple.get_value_shape())
+    print(transform_to_basix_cell(triple.cell, x))
     return create_custom_element(CellType.interval,
                                  value_shape,
                                  polyset.coeffs,
@@ -57,7 +58,7 @@ def convert_to_basix_element(triple, x, M, polyset):
                                  )
 
 
-def right_angled_tri():
+def ufc_triangle():
     vertices = []
     for i in range(3):
         vertices.append(Point(0))
@@ -68,6 +69,10 @@ def right_angled_tri():
 
     tri = Point(2, edges, vertex_num=3, variant="ufc", group=S1, edge_orientations={1: [1, 0]})
     return tri
+
+
+basix_elements = { "interval": Point(1, [Point(0), Point(0)], vertex_num=2, variant="ufc", group=S2),
+                   "triangle": ufc_triangle()}
 
 
 def transform_points(cell_a, cell_b, points):
@@ -81,3 +86,11 @@ def transform_points(cell_a, cell_b, points):
     res = (transform @ np.r_[np.array(points).T, np.ones((1, len(points)))])[:-1]
     res = [tuple(res.T[i]) for i in range(res.shape[1])]
     return res
+
+def transform_to_basix_cell(fuse_cell, x):
+    try:
+        basix_cell = basix_elements[fuse_cell.to_ufl().cellname()] 
+    except KeyError:
+        raise NotImplementedError("Fuse cell doesn't have a Basix equivalent")
+    
+    return transform_points(fuse_cell, basix_cell, x)
