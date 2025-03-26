@@ -148,6 +148,7 @@ class ElementTriple():
         top = ref_el.get_topology()
         min_ids = self.cell.get_starter_ids()
         polyset = self.spaces[0].to_ON_polynomial_set(ref_el)
+        value_shape = self.get_value_shape()
         xs = [[] for dim in sorted(top)]
         Ms = [[] for dim in sorted(top)]
 
@@ -160,7 +161,6 @@ class ElementTriple():
                     dof_added = True
                     converted = dofs[i].convert_to_fiat(ref_el, degree)
                     pt_dict = converted.pt_dict
-                    value_shape = converted.target_shape
                     dof_keys = list((pt_dict.keys()))
                     dof_M = []
                     for d in dof_keys:
@@ -191,23 +191,12 @@ class ElementTriple():
         if len(Ms) < 4:
             for _ in range(4 - len(Ms)):
                 Ms.append([])
+        try:
+            from fuse_basix.basix_interface import convert_to_basix_element
+            return convert_to_basix_element(self, xs, Ms, polyset)
+        except ImportError:
+            raise ImportError("Basix needs to be installed to convert FUSE to Basix")
 
-        print(polyset.coeffs)
-        # element = basix.create_custom_element(
-        #     CellType.interval,
-        #     [],
-        #     polyset.coeffs,
-        #     x,
-        #     M,
-        #     0,
-        #     MapType.identity,
-        #     SobolevSpace.H1,
-        #     False,
-        #     1,
-        #     1,
-        #     PolysetType.standard,
-        # )
-        return xs, Ms
 
     def plot(self, filename="temp.png"):
         # point evaluation nodes only

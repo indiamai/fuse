@@ -22,7 +22,6 @@ dependencies = [
   "sympy",
   "sphinx",
   "matplotlib",
-  "basix"
 ]
 
 [project.urls]
@@ -37,11 +36,14 @@ dev = [
   "coverage",
   "flake8",
 ]
+basix = [
+    "basix",
+]
 
 
 [tool.pytest.ini_options]
 testpaths = [
-    "tests",
+    "test",
 ]
 
 [tool.coverage.run]

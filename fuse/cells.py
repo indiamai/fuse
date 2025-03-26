@@ -470,7 +470,7 @@ class Point():
                     vert_coords += [plotted]
                     if not plain:
                         plt.plot(plotted[0], plotted[1], 'bo')
-                        plt.annotate(node, (plotted[0], plotted[1]))
+                        plt.annotate(self.ordered_vertices().index(node), (plotted[0], plotted[1]))
                 elif i == 1:
                     edgevals = np.array([attach(x) for x in xs])
                     if len(edgevals[0]) < 2:
