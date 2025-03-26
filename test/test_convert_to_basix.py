@@ -13,6 +13,7 @@ def create_cg1(cell):
     cg = ElementTriple(cell, (Pk, CellL2, C0), DOFGenerator(xs, get_cyc_group(len(cell.vertices())), S1))
     return cg
 
+
 @pytest.mark.skipbasix
 def test_basix_conversion():
     cell = cell = Point(1, [Point(0), Point(0)], vertex_num=2)
@@ -21,6 +22,7 @@ def test_basix_conversion():
 
     points = np.array([[0.0], [1.0], [0.5], [-1.0]])
     print(element.tabulate(0, points))
+
 
 @pytest.mark.skipbasix
 def test_cells():

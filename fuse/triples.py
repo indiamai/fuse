@@ -197,7 +197,6 @@ class ElementTriple():
         except ImportError:
             raise ImportError("Basix needs to be installed to convert FUSE to Basix")
 
-
     def plot(self, filename="temp.png"):
         # point evaluation nodes only
         dofs = self.generate()
