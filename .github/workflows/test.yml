@@ -65,7 +65,7 @@ jobs:
           path: .coverage.*
 
   coverage:
-      # if: github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/main'
       name: Coverage
       needs: test
       runs-on: ubuntu-latest
