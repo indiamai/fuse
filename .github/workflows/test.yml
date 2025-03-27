@@ -65,10 +65,10 @@ jobs:
           path: .coverage.*
 
   coverage:
-      if: github.ref == 'refs/heads/main'
       name: Coverage
       needs: test
       runs-on: ubuntu-latest
+      if: success() && github.ref == 'refs/heads/main'
       container:
         image: firedrakeproject/firedrake-vanilla-default:latest
       # Steps represent a sequence of tasks that will be executed as
