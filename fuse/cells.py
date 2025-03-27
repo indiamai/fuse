@@ -699,7 +699,7 @@ class CellComplexToFiatSimplex(Simplex):
     def __init__(self, cell, name=None):
         self.fe_cell = cell
         if name is None:
-            name = "FuseCell"
+            name = generic_cellname(cell)
         self.name = name
 
         # verts = [cell.get_node(v, return_coords=True) for v in cell.ordered_vertices()]
@@ -816,28 +816,7 @@ class CellComplexToUFL(Cell):
 
         # TODO work out generic way around the naming issue
         if not name:
-            num_verts = len(cell.vertices())
-            if num_verts == 1:
-                # Point
-                name = "vertex"
-            elif num_verts == 2:
-                # Line
-                name = "interval"
-            elif num_verts == 3:
-                # Triangle
-                name = "triangle"
-            elif num_verts == 4:
-                if cell.dimension == 2:
-                    # quadrilateral
-                    name = "quadrilateral"
-                elif cell.dimension == 3:
-                    # tetrahedron
-                    name = "tetrahedron"
-            elif num_verts == 8:
-                # hexahedron
-                name = "hexahedron"
-            else:
-                raise TypeError("UFL cell conversion undefined for {}".format(str(cell)))
+            name = generic_cellname(cell)
         super(CellComplexToUFL, self).__init__(name)
 
     def to_fiat(self):
@@ -882,3 +861,23 @@ def constructCellComplex(name):
         return TensorProductPoint(*components).to_ufl(name)
     else:
         raise TypeError("Cell complex construction undefined for {}".format(str(name)))
+
+
+def generic_cellname(cell):
+    num_verts = len(cell.vertices())
+    if num_verts == 1:
+        name = "vertex"
+    elif num_verts == 2:
+        name = "interval"
+    elif num_verts == 3:
+        name = "triangle"
+    elif num_verts == 4:
+        if cell.dimension == 2:
+            name = "quadrilateral"
+        elif cell.dimension == 3:
+            name = "tetrahedron"
+    elif num_verts == 8:
+        name = "hexahedron"
+    else:
+        raise TypeError("Generic cell conversion undefined for {}".format(str(cell)))
+    return name
